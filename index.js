@@ -128,7 +128,7 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 			donate(data.address, function(err, result) {
 				console.log('TXhash=', result);
 			});
-			nextpayout = getTimeStamp() + 5;
+			nextpayout = getTimeStamp() + config.payoutfrequencyinsec;
 			console.log('next payout', nextpayout);
 
 		}, (nextpayout - getTimeStamp()) * 1000);
@@ -141,7 +141,7 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 		donate(data.address, function(err, result) {
 			console.log('TXhash=', result);
 		});
-		nextpayout = getTimeStamp() + 5;
+		nextpayout = getTimeStamp() + config.payoutfrequencyinsec;
 		console.log('next payout', nextpayout);
 	}
 
@@ -210,7 +210,7 @@ function donate(to, cb) {
 
 
 		//		var to = req.params.address;
-		var amount = 1 * 1e18;
+		var amount = config.payoutamountinether * 1e18;
 		console.log("Transferring ", amount, "wei from", account, 'to', to);
 
 		var options = {

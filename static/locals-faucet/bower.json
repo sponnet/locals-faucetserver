@@ -12,7 +12,9 @@
     "iron-ajax": "PolymerElements/iron-ajax#^1.2.0",
     "firebase-element": "GoogleWebComponents/firebase-element#^1.0.12",
     "locals-style": "https://github.com/locals-world/locals-elements-style.git",
-    "locals-input": "https://github.com/locals-world/locals-elements-input.git"
+    "locals-input": "https://github.com/locals-world/locals-elements-input.git",
+    "locals-button": "https://github.com/locals-world/locals-elements-button.git",
+    "locals-item": "https://github.com/locals-world/locals-elements-item.git"
   },
   "devDependencies": {},
   "ignore": []
