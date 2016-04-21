@@ -47,7 +47,7 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 
 				var keystore = new lightwallet.keystore.deserialize(b);
 
-				console.log('connecting to ETH node: ',config.web3.host);
+				console.log('connecting to ETH node: ', config.web3.host);
 
 				var web3Provider = new HookedWeb3Provider({
 					host: config.web3.host,
@@ -75,6 +75,11 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 		});
 	}
 });
+
+function getTimeStamp() {
+	return Math.floor(new Date().getTime() / 1000);
+}
+
 
 // polymer app is served from here
 app.use(express.static('static/locals-faucet/dist'));
@@ -104,16 +109,44 @@ var options = {
 
 var queueRef = myRootRef.child("queue");
 
+var nextpayout = getTimeStamp();
+
 var queue = new Queue(queueRef, options, function(data, progress, resolve, reject) {
 	// Read and process task data
 	console.log('queue item is here...')
 	console.log(data);
 
-	// Finish the task
-	setTimeout(function() {
-		console.log('resolved');
+	if (nextpayout - getTimeStamp() > 0) {
+		// need to wait 
+		console.log('next payout in ', nextpayout - getTimeStamp(), 'sec');
+
+		// Finish the task
+		setTimeout(function() {
+			console.log('resolved');
+			resolve();
+
+			donate(data.address, function(err, result) {
+				console.log('TXhash=', result);
+			});
+			nextpayout = getTimeStamp() + 5;
+			console.log('next payout', nextpayout);
+
+		}, (nextpayout - getTimeStamp()) * 1000);
+
+	} else {
+
+		console.log('next payout is now');
+
 		resolve();
-	}, 1 * 1000);
+		donate(data.address, function(err, result) {
+			console.log('TXhash=', result);
+		});
+		nextpayout = getTimeStamp() + 5;
+		console.log('next payout', nextpayout);
+	}
+
+
+
 });
 
 
@@ -146,7 +179,7 @@ app.get('/donate/:address', function(req, res) {
 			}
 
 			var queueitem = {
-				paydate: Math.floor(new Date().getTime() / 1000) + 60 * length,
+				paydate: Math.floor(new Date().getTime() / 1000),
 				address: address,
 				amount: 1 * 1e18
 			}
@@ -168,7 +201,7 @@ app.get('/donate/:address', function(req, res) {
 
 });
 
-function donate(to) {
+function donate(to, cb) {
 
 	web3.eth.getGasPrice(function(err, result) {
 
@@ -197,8 +230,9 @@ function donate(to) {
 			} else {
 				console.log("Transaction Successful!");
 				console.log(result);
-
 			}
+
+			return cb(err, result);
 
 
 		});
