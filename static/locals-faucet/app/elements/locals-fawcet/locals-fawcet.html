@@ -46,17 +46,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <template is="dom-bind">
       <firebase-collection
           order-by-child="height"
-          location="https://testnet-eth-faucet.firebaseio.com/queue"
+          location="https://testnet-eth-faucet.firebaseio.com/queue/tasks"
           data="{{queue}}"></firebase-collection>
       <template is="dom-repeat" items="[[queue]]" as="donation">
         <h4>[[donation.address]]</h4>
-        <h4>[[donation.date]]</h4>
+        <h4>[[donation.paydate]]</h4>
       </template>
     </template>
 
     <h3>Status</h3>
     <p>
-      Serving from account {{faucetaccount}} ( balance {{faucetbalance}} ETH )
+    Serving from account <a target="_new" href="{{etherscanroot}}{{faucetaccount}}">{{faucetaccount}}</a> ( balance {{faucetbalance}} ETH )
     </p>
 
   </template>
@@ -92,6 +92,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(request.detail.response);
         this.faucetaccount = request.detail.response.account;
         this.faucetbalance = request.detail.response.balance;
+        this.etherscanroot = request.detail.response.etherscanroot;
       }
 
     });

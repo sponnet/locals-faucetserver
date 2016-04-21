@@ -5,6 +5,7 @@ var HookedWeb3Provider = require("hooked-web3-provider");
 var lightwallet = require("eth-lightwallet");
 var config = require('./config.json');
 var Firebase = require('firebase');
+var Queue = require('firebase-queue');
 var myRootRef = new Firebase(config.firebase.url);
 
 var faucet_keystore = JSON.stringify(require("./wallet.json"));
@@ -46,8 +47,10 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 
 				var keystore = new lightwallet.keystore.deserialize(b);
 
+				console.log('connecting to ETH node: ',config.web3.host);
+
 				var web3Provider = new HookedWeb3Provider({
-					host: "http://109.123.70.141:8545",
+					host: config.web3.host,
 					transaction_signer: keystore
 				});
 
@@ -62,13 +65,9 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 
 				account = fixaddress(keystore.getAddresses()[0]);
 
-
-				//console.log('Balance of ',account, 'is',etherbalance);
-
-
 				// start webserver...
 				app.listen(3000, function() {
-					console.log('Example app listening on port 3000!');
+					console.log('Fawcet listening on port 3000!');
 				});
 
 			});
@@ -82,19 +81,40 @@ app.use(express.static('static/locals-faucet/dist'));
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
-
-	var etherbalance = parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), 'ether'));
-
+	var etherbalance = -1;
+	try {
+		etherbalance = parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), 'ether'));
+	} catch (e) {
+		console.log(e);
+	}
 	res.status(200).json({
 		account: account,
-		balance: etherbalance
+		balance: etherbalance,
+		etherscanroot: config.etherscanroot
 	});
 });
 
-setInterval(function() {
 
-	console.log('hup');
-}, 1000);
+
+// Creates the Queue
+var options = {
+	//specId: 'faucet',
+	numWorkers: 1
+};
+
+var queueRef = myRootRef.child("queue");
+
+var queue = new Queue(queueRef, options, function(data, progress, resolve, reject) {
+	// Read and process task data
+	console.log('queue item is here...')
+	console.log(data);
+
+	// Finish the task
+	setTimeout(function() {
+		console.log('resolved');
+		resolve();
+	}, 1 * 1000);
+});
 
 
 
@@ -106,8 +126,8 @@ app.get('/donate/:address', function(req, res) {
 
 	if (isAddress(address)) {
 
-		var queue = myRootRef.child("queue");
-		queue.once('value', function(snap) {
+		var queuetasks = myRootRef.child("queue").child('tasks');
+		queuetasks.once('value', function(snap) {
 			var list = snap.val();
 			var length = 0;
 
@@ -117,7 +137,7 @@ app.get('/donate/:address', function(req, res) {
 				length = Object.keys(list).length;
 				console.log('length=', length);
 
-				if (length > 5) {
+				if (length >= 5) {
 					// queue is full
 					return res.status(403).json({
 						msg: 'queue is full'
@@ -126,14 +146,13 @@ app.get('/donate/:address', function(req, res) {
 			}
 
 			var queueitem = {
-				date: Math.floor(new Date().getTime() / 1000) + 60 * length,
+				paydate: Math.floor(new Date().getTime() / 1000) + 60 * length,
 				address: address,
 				amount: 1 * 1e18
 			}
-			queue.push(queueitem);
+			queuetasks.push(queueitem);
 
 			res.status(200).json(queueitem);
-
 
 		});
 
