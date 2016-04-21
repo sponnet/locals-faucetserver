@@ -63,35 +63,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <!-- Main Content -->
-    <div class="content">
 
-      <paper-material elevation="1">
 
         <locals-fawcet></locals-fawcet>
-      </paper-material>
 
-    </div>
 
-    <paper-toast id="toast">
-      <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
-    </paper-toast>
 
-    <!-- Uncomment next block to enable Service Worker support (1/2) -->
-    <!--
-    <paper-toast id="caching-complete"
-                 duration="6000"
-                 text="Caching complete! This app will work offline."></paper-toast>
-
-  <platinum-sw-register auto-register
-                          clients-claim
-                          skip-waiting
-                          base-uri="bower_components/platinum-sw/bootstrap"
-                          on-service-worker-installed="displayInstalledToast">
-    <platinum-sw-cache default-cache-strategy="fastest"
-                         cache-config-file="cache-config.json"></platinum-sw-cache>
-  </platinum-sw-register>
-  -->
 </template>
 
 </body>

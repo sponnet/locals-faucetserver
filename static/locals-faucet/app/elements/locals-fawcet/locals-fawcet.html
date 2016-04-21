@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-styles/typography.html">
 
 <dom-module id="locals-fawcet">
   <template>
@@ -17,17 +16,61 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host {
         display: block;
       }
-      span,
-      input {
-        @apply(--paper-font-body2);
+      .canvas {
+        @apply(--locals-canvas);
       }
+     .whitespace {
+      height: 20px;
+     }
+      h1 {
+       @apply(--locals-font-h1);
+      }
+      h2 {
+       @apply(--locals-font-h2);
+      }
+      h3 {
+       @apply(--locals-font-h3);
+      }
+      h4 {
+       @apply(--locals-font-h4);
+      }
+      p {
+       @apply(--locals-font-body1);
+      }
+      small {
+       @apply(--locals-font-small);
+       color: rgba(0,0,0,0.75);
+      }
+
+      locals-item {
+        border-bottom: 1px solid lightgrey;
+      }
+
+      .queue {
+        width: 50vw;
+        min-width: 300px;
+        border-top: 2px solid var(--locals-blue);
+        border-bottom: 2px solid var(--locals-blue);
+        box-sizing: border-box;
+        padding: 10px 0px;
+      }
+
+      .time {
+       color: rgba(0,0,0,0.5);
+       font-size: 14px;
+      }
+
     </style>
 
+    <div class="canvas">
     <h1>ETHicopter</h1>
-    <h4>Testnet Helicopter money</h4>
+    <p>Testnet Helicopter money</p>
+    <div class="whitespace"></div>
 
-    <paper-input value="{{address}}"></paper-input>
-    <paper-button on-tap="sendether" raised>Gimme 1 test ether dawg!</paper-button>
+    <locals-input bind-value="{{address}}" label="Your testaccount"></locals-input>
+    <div class="whitespace"></div>
+    <locals-button on-tap="sendether">Gimme 1 test ether dawg!</locals-button><br>
+    <small> Serving from account <a target="_new" href="{{etherscanroot}}{{faucetaccount}}">{{faucetaccount}}</a> ( balance {{faucetbalance}} ETH )</small>
     <iron-ajax
       id="ajax"
       url=""
@@ -41,24 +84,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       handle-as="json"
       on-response="hresponseInit"
       debounce-duration="300"></iron-ajax>
+    <div class="whitespace"></div>
+    <div class="whitespace"></div>
 
-    <h3>Faucet queue</h3>
+    <div class="queue">
+    <p>Faucet queue</p>
     <template is="dom-bind">
       <firebase-collection
           order-by-child="height"
           location="https://testnet-eth-faucet.firebaseio.com/queue/tasks"
           data="{{queue}}"></firebase-collection>
       <template is="dom-repeat" items="[[queue]]" as="donation">
-        <h4>[[donation.address]]</h4>
-        <h4>[[donation.paydate]]</h4>
+      <locals-item>
+        <small>Ether received by</small>
+        <p>[[donation.address]]</p>
+        <p class="time">at [[donation.paydate]]</p>
+        </locals-item>
       </template>
     </template>
+    </div>
 
-    <h3>Status</h3>
-    <p>
-    Serving from account <a target="_new" href="{{etherscanroot}}{{faucetaccount}}">{{faucetaccount}}</a> ( balance {{faucetbalance}} ETH )
-    </p>
-
+    </div>
   </template>
   <script>
   (function() {
