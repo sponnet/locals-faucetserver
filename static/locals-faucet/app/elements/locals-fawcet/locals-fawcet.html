@@ -1,0 +1,100 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="locals-fawcet">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+    </style>
+
+    <h1>ETHicopter</h1>
+    <h4>Testnet Helicopter money</h4>
+
+    <paper-input value="{{address}}"></paper-input>
+    <paper-button on-tap="sendether" raised>Gimme 1 test ether dawg!</paper-button>
+    <iron-ajax
+      id="ajax"
+      url=""
+      handle-as="json"
+      on-response="hresponse"
+      debounce-duration="300"></iron-ajax>
+
+    <iron-ajax auto
+      id="ajax-init"
+      url="../faucetinfo"
+      handle-as="json"
+      on-response="hresponseInit"
+      debounce-duration="300"></iron-ajax>
+
+    <h3>Faucet queue</h3>
+    <template is="dom-bind">
+      <firebase-collection
+          order-by-child="height"
+          location="https://testnet-eth-faucet.firebaseio.com/queue"
+          data="{{queue}}"></firebase-collection>
+      <template is="dom-repeat" items="[[queue]]" as="donation">
+        <h4>[[donation.address]]</h4>
+        <h4>[[donation.date]]</h4>
+      </template>
+    </template>
+
+    <h3>Status</h3>
+    <p>
+      Serving from account {{faucetaccount}} ( balance {{faucetbalance}} ETH )
+    </p>
+
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'locals-fawcet',
+
+      properties: {
+        notifications: {
+          type: Array,
+          notify: true
+        }
+      },
+
+      ready: function() {
+
+      },
+
+      sendether: function() {
+        console.log('send me 1 testnet ether DAWG!');
+        this.$.ajax.url = 'donate/' + this.address;
+        this.$.ajax.generateRequest();
+      },
+
+      hresponse: function(request) {
+        console.log(request.detail.response);
+      },
+
+      hresponseInit: function(request) {
+        console.log(request.detail.response);
+        this.faucetaccount = request.detail.response.account;
+        this.faucetbalance = request.detail.response.balance;
+      }
+
+    });
+  })();
+  </script>
+</dom-module>

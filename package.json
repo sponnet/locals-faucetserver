@@ -1,0 +1,19 @@
+{
+  "name": "locals-faucetserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "eth-lightwallet": "^2.3.1",
+    "express": "^4.13.4",
+    "firebase": "^2.4.2",
+    "hooked-web3-provider": "^1.0.0",
+    "lodash": "^4.11.1",
+    "web3": "^0.15.3"
+  }
+}
