@@ -1,0 +1,10 @@
+{
+	"etherscanroot": "http://testnet.etherscan.io/address/",
+	"firebase": {
+		"secret": "nL5SqIBrUzS4jQ1Xntzjh6SbtsI4gCcakM97Pk1J",
+		"url": "https://testnet-eth-faucet.firebaseio.com/"
+	},
+	"web3": {
+		"host": "http://109.123.70.141:8545"
+	}
+}

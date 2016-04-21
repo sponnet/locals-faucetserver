@@ -113,7 +113,7 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 	setTimeout(function() {
 		console.log('resolved');
 		resolve();
-	}, 1 * 1000);
+	}, 600 * 1000);
 });
 
 
