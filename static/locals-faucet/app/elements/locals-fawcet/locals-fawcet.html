@@ -70,8 +70,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <locals-input bind-value="{{address}}" label="Your testaccount"></locals-input>
     <div class="whitespace"></div>
     <locals-button on-tap="sendether">Gimme 1 test ether dawg!</locals-button><br>
-    <small> Serving from account <a target="_new" href="{{etherscanroot}}{{faucetaccount}}">{{faucetaccount}}</a> ( balance {{faucetbalance}} ETH )</small>
-    <iron-ajax
+    <small>This faucet drips {{faucetinfo.payoutamountinether}} Ether every {{faucetinfo.payoutfrequencyinsec}} seconds. You can register your account in our queue. Max queue size is currently {{faucetinfo.queuesize}}</small>.
+    <small> Serving from account <a target="_new" href="{{faucetinfo.etherscanroot}}{{faucetinfo.faucetaccount}}">{{faucetinfo.account}}</a> ( balance {{faucetinfo.balance}} ETH )</small>    <iron-ajax
       id="ajax"
       url=""
       handle-as="json"
@@ -136,9 +136,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       hresponseInit: function(request) {
         console.log(request.detail.response);
+        this.faucetinfo = request.detail.response;
+        /*
         this.faucetaccount = request.detail.response.account;
         this.faucetbalance = request.detail.response.balance;
         this.etherscanroot = request.detail.response.etherscanroot;
+        */
       }
 
     });

@@ -68,7 +68,7 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 
 				// start webserver...
 				app.listen(config.httpport, function() {
-					console.log('Fawcet listening on port ',config.httpport);
+					console.log('Fawcet listening on port ', config.httpport);
 				});
 
 			});
@@ -82,8 +82,8 @@ function getTimeStamp() {
 }
 
 // Get faucet balance in ether ( or other denomination if given )
-function getFaucetBalance(denomination){
-			return parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), denomination || 'ether'));
+function getFaucetBalance(denomination) {
+	return parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), denomination || 'ether'));
 }
 
 app.use(cors());
@@ -102,7 +102,10 @@ app.get('/faucetinfo', function(req, res) {
 	res.status(200).json({
 		account: account,
 		balance: etherbalance,
-		etherscanroot: config.etherscanroot
+		etherscanroot: config.etherscanroot,
+		payoutfrequencyinsec: config.payoutfrequencyinsec,
+		payoutamountinether: config.payoutamountinether,
+		queuesize: config.queuesize,
 	});
 });
 
