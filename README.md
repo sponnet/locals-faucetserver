@@ -35,10 +35,15 @@ Create a config file ```config.json```
 }
 ```
 
+If you made it this far, just start your faucet:
 
 ```
 node index.js
 ```
+
+...and point your browser to http://localhost:3000/
+
+
 
 
 
