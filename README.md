@@ -45,6 +45,13 @@ node index.js
 
 ...and point your browser to http://localhost:3000/
 
+# Demo
+
+You can access our faucet at:
+http://faucet.ma.cx:3000/
+
+
+
 
 
 
