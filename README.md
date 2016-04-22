@@ -1,9 +1,11 @@
 # locals-faucetserver
 a (testnet) Ether faucet with a Polymer frontend and a REST API
 
-# installing
+#prerequisites
+- A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
+- A free Firebase account to host the queue
 
-Install a local GETH node.
+# installing
 
 
 ```
