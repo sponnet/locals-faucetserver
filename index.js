@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var cors = require('cors');
 var Web3 = require('web3');
 var HookedWeb3Provider = require("hooked-web3-provider");
 var lightwallet = require("eth-lightwallet");
@@ -66,8 +67,8 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 				account = fixaddress(keystore.getAddresses()[0]);
 
 				// start webserver...
-				app.listen(3000, function() {
-					console.log('Fawcet listening on port 3000!');
+				app.listen(config.httpport, function() {
+					console.log('Fawcet listening on port ',config.httpport);
 				});
 
 			});
@@ -80,6 +81,12 @@ function getTimeStamp() {
 	return Math.floor(new Date().getTime() / 1000);
 }
 
+// Get faucet balance in ether ( or other denomination if given )
+function getFaucetBalance(denomination){
+			return parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), denomination || 'ether'));
+}
+
+app.use(cors());
 
 // polymer app is served from here
 app.use(express.static('static/locals-faucet/dist'));
@@ -88,7 +95,7 @@ app.use(express.static('static/locals-faucet/dist'));
 app.get('/faucetinfo', function(req, res) {
 	var etherbalance = -1;
 	try {
-		etherbalance = parseFloat(web3.fromWei(web3.eth.getBalance(account).toNumber(), 'ether'));
+		etherbalance = getFaucetBalance();
 	} catch (e) {
 		console.log(e);
 	}
@@ -170,7 +177,7 @@ app.get('/donate/:address', function(req, res) {
 				length = Object.keys(list).length;
 				console.log('length=', length);
 
-				if (length >= 5) {
+				if (length >= config.queuesize) {
 					// queue is full
 					return res.status(403).json({
 						msg: 'queue is full'

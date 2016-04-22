@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.7.1",
     "eth-lightwallet": "^2.3.1",
     "express": "^4.13.4",
     "firebase": "^2.4.2",
