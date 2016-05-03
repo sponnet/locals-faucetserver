@@ -63,19 +63,22 @@ http://faucet.ma.cx:3000/
 {
 "paydate": 1461335186,
 "address": "0x687422eea2cb73b5d3e242ba5456b782919afc85",
-"amount": 1000000000000000000
+"amount": 1000000000000000000,
+"txhash": "0x..."
 }
 ```
 
 * ```paydate``` the unix timestamp when the transaction will be executed. Depends on the current length of the queue
 * ```address``` the address where the payment will be done
 * ```amount``` the amount in Wei that will be transferred
+* ```txhash``` transaction hash : if the queue is empty, you will immediately receive the transaction log - if the queue is not empty - your request will be queued until paydate and the txhash field will be empty.
 
 ##HTTP Return / error codes
 
 * ```200``` : Request OK
 * ```400``` : The address in invalid
 * ```403``` : The queue is full. You should wait a moment and try again later. 
+* ```500``` : Internal faucet error
 
 
 

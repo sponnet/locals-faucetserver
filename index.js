@@ -21,7 +21,7 @@ function isAddress(address) {
 // Add 0x to address 
 function fixaddress(address) {
 	// Strip all spaces
-	address = address.replace(' ','');
+	address = address.replace(' ', '');
 
 	//console.log("Fix address", address);
 	if (!strStartsWith(address, '0x')) {
@@ -175,7 +175,7 @@ app.get('/donate/:address', function(req, res) {
 			var length = 0;
 
 			var queueitem = {
-				paydate: Math.floor(new Date().getTime() / 1000) + length * config.payoutfrequencyinsec,
+				paydate: Math.floor(new Date().getTime() / 1000),
 				address: address,
 				amount: 1 * 1e18
 			};
@@ -197,23 +197,28 @@ app.get('/donate/:address', function(req, res) {
 					});
 				} else {
 					// queue is not full - enqueue the item
-					res.status(200).json(queueitem);
+					queuetasks.paydate += length * config.payoutfrequencyinsec;
 					queuetasks.push(queueitem);
+					return res.status(200).json(queueitem);
 				}
 			} else {
 				// if queue is empty - pay immediately - and return the TXhash. 
 				// But also save it to the queue
 				// so the next payout needs to wait for the next interval.
 				donate(queueitem.address, function(err, result) {
-					console.log('TXhash=', result);
+					if (err) {
+						return res.status(500).json({
+							error: err
+						});
+					}
 					queueitem.txhash = result;
 					queuetasks.push(queueitem);
-					res.status(200).json(queueitem);
+					return res.status(200).json(queueitem);
 				});
 			}
 		});
 	} else {
-		res.status(400).json({
+		return res.status(400).json({
 			message: 'the address is invalid'
 		});
 
@@ -241,7 +246,7 @@ function donate(to, cb) {
 			value: amount,
 			gas: 314150,
 			gasPrice: gasPrice,
-			nonce: Math.floor(Math.random(999999)) + new Date().getTime(),
+			nonce: 999999 + new Date().getTime(),
 		};
 		console.log(options);
 		web3.eth.sendTransaction(options, function(err, result) {
