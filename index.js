@@ -246,7 +246,7 @@ function donate(to, cb) {
 			value: amount,
 			gas: 314150,
 			gasPrice: gasPrice,
-			nonce: 999999 + new Date().getTime(),
+			//nonce: 999999 + new Date().getTime(),
 		};
 		console.log(options);
 		web3.eth.sendTransaction(options, function(err, result) {
