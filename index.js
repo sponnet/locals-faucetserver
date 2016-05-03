@@ -20,6 +20,9 @@ function isAddress(address) {
 
 // Add 0x to address 
 function fixaddress(address) {
+	// Strip all spaces
+	address = address.replace(' ','');
+
 	//console.log("Fix address", address);
 	if (!strStartsWith(address, '0x')) {
 		return ('0x' + address);
@@ -154,9 +157,6 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 		nextpayout = getTimeStamp() + config.payoutfrequencyinsec;
 		console.log('next payout', nextpayout);
 	}
-
-
-
 });
 
 
@@ -174,32 +174,44 @@ app.get('/donate/:address', function(req, res) {
 			var list = snap.val();
 			var length = 0;
 
+			var queueitem = {
+				paydate: Math.floor(new Date().getTime() / 1000) + length * config.payoutfrequencyinsec,
+				address: address,
+				amount: 1 * 1e18
+			};
+
 			if (list) {
 
-				console.log('list', list)
 				length = Object.keys(list).length;
-				console.log('length=', length);
+				console.log('queuelength=', length);
 
-				if (length >= config.queuesize) {
-					// queue is full
+				if (length == 0) {
+					// this should never happen...
+					return res.status(500).json({
+						error: "Call the plumber"
+					});
+				} else if (length >= config.queuesize) {
+					// queue is full - reject request
 					return res.status(403).json({
 						msg: 'queue is full'
 					});
+				} else {
+					// queue is not full - enqueue the item
+					res.status(200).json(queueitem);
+					queuetasks.push(queueitem);
 				}
+			} else {
+				// if queue is empty - pay immediately - and return the TXhash. 
+				// But also save it to the queue
+				// so the next payout needs to wait for the next interval.
+				donate(queueitem.address, function(err, result) {
+					console.log('TXhash=', result);
+					queueitem.txhash = result;
+					queuetasks.push(queueitem);
+					res.status(200).json(queueitem);
+				});
 			}
-
-			var queueitem = {
-				paydate: Math.floor(new Date().getTime() / 1000),
-				address: address,
-				amount: 1 * 1e18
-			}
-			queuetasks.push(queueitem);
-
-			res.status(200).json(queueitem);
-
 		});
-
-
 	} else {
 		res.status(400).json({
 			message: 'the address is invalid'
