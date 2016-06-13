@@ -63,46 +63,55 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div class="canvas">
-    <h1>ETHicopter</h1>
-    <p>Testnet Helicopter money</p>
-    <div class="whitespace"></div>
+      <h1>ETHicopter</h1>
+      <p>Testnet Helicopter money</p>
+      <div class="whitespace"></div>
 
-    <locals-input bind-value="{{address}}" label="Your testaccount"></locals-input>
-    <div class="whitespace"></div>
-    <locals-button on-tap="sendether">Gimme 1 test ether dawg!</locals-button><br>
-    <small>This faucet drips {{faucetinfo.payoutamountinether}} Ether every {{faucetinfo.payoutfrequencyinsec}} seconds. You can register your account in our queue. Max queue size is currently {{faucetinfo.queuesize}}</small>.
-    <small> Serving from account <a target="_new" href="{{faucetinfo.etherscanroot}}{{faucetinfo.faucetaccount}}">{{faucetinfo.account}}</a> ( balance {{faucetinfo.balance}} ETH )</small>    <iron-ajax
+      <locals-input bind-value="{{address}}" label="Your testaccount"></locals-input>
+      <div class="whitespace"></div>
+      <locals-button on-tap="sendether">Send me 1 test ether!</locals-button>
+      <br>
+      <small>
+        This faucet drips {{faucetinfo.payoutamountinether}} Ether every {{faucetinfo.payoutfrequencyinsec}} seconds. You can register your account in our queue. Max queue size is currently {{faucetinfo.queuesize}}
+      </small>
+      .
+      <small>
+        Serving from account
+        <a target="_new" href="{{faucetinfo.etherscanroot}}{{faucetinfo.account}}">{{faucetinfo.account}}</a>
+        ( balance {{faucetinfo.balance}} ETH )
+      </small>
+      <iron-ajax
       id="ajax"
       url=""
       handle-as="json"
       on-response="hresponse"
       debounce-duration="300"></iron-ajax>
 
-    <iron-ajax auto
+      <iron-ajax auto
       id="ajax-init"
       url="../faucetinfo"
       handle-as="json"
       on-response="hresponseInit"
       debounce-duration="300"></iron-ajax>
-    <div class="whitespace"></div>
-    <div class="whitespace"></div>
+      <div class="whitespace"></div>
+      <div class="whitespace"></div>
 
-    <div class="queue">
-    <p>Faucet queue</p>
-    <template is="dom-bind">
-      <firebase-collection
+      <div class="queue">
+        <p>Faucet queue</p>
+        <template is="dom-bind">
+          <firebase-collection
           order-by-child="height"
           location="https://testnet-eth-faucet.firebaseio.com/queue/tasks"
           data="{{queue}}"></firebase-collection>
-      <template is="dom-repeat" items="[[queue]]" as="donation">
-      <locals-item>
-        <small>Ether received by</small>
-        <p>[[donation.address]]</p>
-        <p class="time">at [[donation.paydate]]</p>
-        </locals-item>
-      </template>
-    </template>
-    </div>
+          <template is="dom-repeat" items="[[queue]]" as="donation">
+            <locals-item>
+              <small>Ether will be sent to</small>
+              <p>[[donation.address]]</p>
+              <p class="time">at [[donation.paydate]]</p>
+            </locals-item>
+          </template>
+        </template>
+      </div>
 
     </div>
   </template>
