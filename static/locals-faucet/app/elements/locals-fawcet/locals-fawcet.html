@@ -39,7 +39,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       small {
        @apply(--locals-font-small);
-       color: rgba(0,0,0,0.75);
+       color: var(--locals-grey6);
+       @apply(--opensans-reg);
       }
 
       locals-item {
@@ -60,11 +61,57 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        font-size: 14px;
       }
 
+      .fromalabswithlove {
+/*        max-width: 300px;*/
+        @apply(--layout-horizontal);
+        @apply(--layout-center); 
+        margin-top: 20px;
+      }
+
+      .fromalabswithlove p {
+        @apply(--opensans-semibold);
+        color: var(--locals-darkgrey);
+        font-size: 12px;
+      }
+
+      .alabs {
+        @apply(--layout-horizontal);
+        @apply(--layout-center); 
+        box-sizing: border-box;
+        padding: 6px; 
+        margin-left: 4px;
+        border-radius: 5px;
+      }
+
+      .alabs:hover {
+        cursor: pointer;
+        background-color: var(--locals-grey1);        
+      }
+
+
+      .alabs a {
+        @apply(--opensans-bold);
+        color: var(--locals-darkgrey);
+        font-size: 12px;
+        text-decoration: underline;
+        margin: 0px 5px 0px 5px;
+      }
+
+      .alabs img {
+        width: 20px;
+      }
+
+
+      locals-button {
+        margin-bottom: 20px;
+      }
+
+
     </style>
 
     <div class="canvas">
-      <h1>ETHicopter</h1>
-      <p>Testnet Helicopter money</p>
+      <h1>Ethereum Testnet Faucet</h1>
+      <!-- <p>Testnet Helicopter money</p> -->
       <div class="whitespace"></div>
 
       <locals-input bind-value="{{address}}" label="Your testaccount"></locals-input>
@@ -111,6 +158,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </locals-item>
           </template>
         </template>
+      </div>
+
+      <div class="fromalabswithlove">
+        <p>This component is proudly brought to you by</p>
+        <div class="alabs">
+          <img src="../../images/A-LabsLogo.svg">
+          <a href="//astadlabs.slack.com">A-Labs</a>
+        </div>
       </div>
 
     </div>
