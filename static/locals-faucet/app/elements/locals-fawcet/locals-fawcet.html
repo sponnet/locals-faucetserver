@@ -127,6 +127,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <a target="_new" href="{{faucetinfo.etherscanroot}}{{faucetinfo.account}}">{{faucetinfo.account}}</a>
         ( balance {{faucetinfo.balance}} ETH )
       </small>
+      <br>
+      <small>
+        Example command line: wget http://faucet.ma.cx:3000/donate/&lt;your ethereum address&gt;
+      </small>
+
+      <br>
+      <small>
+        Example REST API: http://faucet.ma.cx:3000/donate/&lt;your ethereum address&gt;
+        <a href="https://github.com/locals-world/locals-faucetserver#api">API docs</a>
+      </small>
+
       <iron-ajax
       id="ajax"
       url=""
@@ -164,7 +175,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <p>This component is proudly brought to you by</p>
         <div class="alabs">
           <img src="../../images/A-LabsLogo.svg">
-          <a href="//alabs-antwerp.slack.com/">A-Labs</a>
+          <a href="//github.com/locals-world">A-Labs</a>
         </div>
       </div>
 
