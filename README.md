@@ -1,5 +1,5 @@
 # locals-faucetserver
-a (testnet) Ether faucet with a Polymer frontend and a REST API
+a Ropsten (testnet) Ether faucet with a Polymer frontend and a REST API
 
 #prerequisites
 - A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
@@ -43,17 +43,17 @@ If you made it this far, just start your faucet:
 node index.js
 ```
 
-...and point your browser to http://localhost:3000/
+...and point your browser to http://localhost:3001/
 
 # Demo
 
 You can access our faucet at:
-http://faucet.ma.cx:3000/
+http://faucet.ropsten.be:3001/
 
 # API
 
 ##Endpoint
-```GET http://faucet.ma.cx:3000/donate/{ethereum address}```
+```GET http://faucet.ropsten.be:3001/donate/{ethereum address}```
 
 ##Request parameters
 ```ethereum address``` your ethereum address
