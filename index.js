@@ -120,7 +120,7 @@ var options = {
 	numWorkers: 1
 };
 
-var queueRef = myRootRef.child("queue");
+var queueRef = myRootRef.child("queue" + Date.now());
 
 var nextpayout = getTimeStamp();
 
@@ -169,7 +169,7 @@ app.get('/donate/:address', function(req, res) {
 
 	if (isAddress(address)) {
 
-		var queuetasks = myRootRef.child("queue").child('tasks');
+		var queuetasks = queueRef.child('tasks');
 		queuetasks.once('value', function(snap) {
 			var list = snap.val();
 			var length = 0;
