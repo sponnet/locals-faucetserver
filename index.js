@@ -36,7 +36,9 @@ function strStartsWith(str, prefix) {
 
 var account;
 var web3;
-var donationqueue = {};
+
+var nextdrip;
+
 
 myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) {
 	if (error) {
@@ -94,6 +96,8 @@ app.use(cors());
 // polymer app is served from here
 app.use(express.static('static/locals-faucet/dist'));
 
+var randomQueueName = "queue" + Date.now();
+
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
 	var etherbalance = -1;
@@ -109,18 +113,17 @@ app.get('/faucetinfo', function(req, res) {
 		payoutfrequencyinsec: config.payoutfrequencyinsec,
 		payoutamountinether: config.payoutamountinether,
 		queuesize: config.queuesize,
+		queuename: randomQueueName
 	});
 });
 
-
-
 // Creates the Queue
 var options = {
-	//specId: 'faucet',
-	numWorkers: 1
+	numWorkers: config.queuesize,
+	sanitize: false
 };
 
-var queueRef = myRootRef.child("queue" + Date.now());
+var queueRef = myRootRef.child(randomQueueName);
 
 var nextpayout = getTimeStamp();
 
@@ -129,37 +132,42 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 	console.log('queue item is here...')
 	console.log(data);
 
-	if (nextpayout - getTimeStamp() > 0) {
-		// need to wait 
-		console.log('next payout in ', nextpayout - getTimeStamp(), 'sec');
+	// if (nextpayout - getTimeStamp() > 0) {
+	// need to wait 
 
-		// Finish the task
-		setTimeout(function() {
-			console.log('resolved');
-			resolve();
+	var delay = data.paydate - getTimeStamp();
 
-			donate(data.address, function(err, result) {
-				console.log('TXhash=', result);
-			});
-			nextpayout = getTimeStamp() + config.payoutfrequencyinsec;
-			console.log('next payout', nextpayout);
+	console.log('next payout in ', delay, 'sec');
 
-		}, (nextpayout - getTimeStamp()) * 1000);
-
-	} else {
-
-		console.log('next payout is now');
-
-		resolve();
-		donate(data.address, function(err, result) {
-			console.log('TXhash=', result);
-		});
-		nextpayout = getTimeStamp() + config.payoutfrequencyinsec;
-		console.log('next payout', nextpayout);
+	if (delay < 0) {
+		delay = 0;
 	}
+
+	setTimeout(function() {
+
+
+		donate(data.address, function(err, result) {
+			if (err) {
+				console.log(err);
+				reject();
+			}
+
+			queueRef.child('tasks').child(data._id).child('txhash').set(result)
+				.then(function() {
+					console.log('tx set');
+				});
+
+			setTimeout(function() {
+				resolve();
+				console.log('resolved');
+			}, 20 * 1000);
+
+		});
+
+
+	}, delay * 1000);
+
 });
-
-
 
 // add our address to the donation queue
 app.get('/donate/:address', function(req, res) {
@@ -171,52 +179,38 @@ app.get('/donate/:address', function(req, res) {
 
 		var queuetasks = queueRef.child('tasks');
 		queuetasks.once('value', function(snap) {
-			var list = snap.val();
-			var length = 0;
+
+			// first time
+			if (!nextdrip) {
+				nextdrip = getTimeStamp();
+			}
 
 			var queueitem = {
-				paydate: Math.floor(new Date().getTime() / 1000),
+				paydate: nextdrip,
 				address: address,
 				amount: 1 * 1e18
 			};
 
+			var list = snap.val();
+
 			if (list) {
 
-				length = Object.keys(list).length;
-				console.log('queuelength=', length);
+				var length = Object.keys(list).length;
 
-				if (length == 0) {
-					// this should never happen...
-					return res.status(500).json({
-						error: "Call the plumber"
-					});
-				} else if (length >= config.queuesize) {
+				if (length >= config.queuesize) {
 					// queue is full - reject request
 					return res.status(403).json({
 						msg: 'queue is full'
 					});
-				} else {
-					// queue is not full - enqueue the item
-					queuetasks.paydate += length * config.payoutfrequencyinsec;
-					queuetasks.push(queueitem);
-					return res.status(200).json(queueitem);
 				}
-			} else {
-				// if queue is empty - pay immediately - and return the TXhash. 
-				// But also save it to the queue
-				// so the next payout needs to wait for the next interval.
-				donate(queueitem.address, function(err, result) {
-					if (err) {
-						return res.status(500).json({
-							error: err
-						});
-					}
-					queueitem.txhash = result;
-					queuetasks.push(queueitem);
-					return res.status(200).json(queueitem);
-				});
 			}
+
+			queuetasks.push(queueitem);
+			nextdrip += config.payoutfrequencyinsec;
+			return res.status(200).json(queueitem);
+
 		});
+
 	} else {
 		return res.status(400).json({
 			message: 'the address is invalid'
@@ -235,8 +229,6 @@ function donate(to, cb) {
 		var gasPrice = result.toNumber(10);
 		console.log('gasprice is ', gasPrice);
 
-
-		//		var to = req.params.address;
 		var amount = config.payoutamountinether * 1e18;
 		console.log("Transferring ", amount, "wei from", account, 'to', to);
 
@@ -246,7 +238,6 @@ function donate(to, cb) {
 			value: amount,
 			gas: 314150,
 			gasPrice: gasPrice,
-			//nonce: 999999 + new Date().getTime(),
 		};
 		console.log(options);
 		web3.eth.sendTransaction(options, function(err, result) {
