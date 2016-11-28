@@ -97,6 +97,7 @@ app.use(cors());
 app.use(express.static('static/locals-faucet/dist'));
 
 var randomQueueName = "queue" + Date.now();
+var blacklistName = "blacklist";
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
@@ -124,6 +125,7 @@ var options = {
 };
 
 var queueRef = myRootRef.child(randomQueueName);
+var blacklist = myRootRef.child(blacklistName);
 
 var nextpayout = getTimeStamp();
 
@@ -169,47 +171,74 @@ var queue = new Queue(queueRef, options, function(data, progress, resolve, rejec
 
 });
 
+app.get('/blacklist/:address', function(req, res) {
+	var address = fixaddress(req.params.address);
+	if (isAddress(address)) {
+		blacklist.child(address).set(Date.now());
+		res.status(200).json({
+			msg: 'address added to blacklist'
+		});
+	} else {
+		return res.status(400).json({
+			message: 'the address is invalid'
+		});
+	}
+});
+
 // add our address to the donation queue
 app.get('/donate/:address', function(req, res) {
 	console.log('push');
 
 	var address = fixaddress(req.params.address);
-
 	if (isAddress(address)) {
-
-		var queuetasks = queueRef.child('tasks');
-		queuetasks.once('value', function(snap) {
-
-			// first time
-			if (!nextdrip) {
-				nextdrip = getTimeStamp();
+		blacklist.child(address).once('value', function(snapshot) {
+			var exists = (snapshot.val() !== null);
+			if (exists) {
+				return res.status(200).json({
+					paydate: 0,
+					address: address,
+					amount: 0
+				});
 			}
 
-			var queueitem = {
-				paydate: nextdrip,
-				address: address,
-				amount: 1 * 1e18
-			};
 
-			var list = snap.val();
+			var queuetasks = queueRef.child('tasks');
+			queuetasks.once('value', function(snap) {
 
-			if (list) {
-
-				var length = Object.keys(list).length;
-
-				if (length >= config.queuesize) {
-					// queue is full - reject request
-					return res.status(403).json({
-						msg: 'queue is full'
-					});
+				// first time
+				if (!nextdrip) {
+					nextdrip = getTimeStamp();
 				}
-			}
 
-			queuetasks.push(queueitem);
-			nextdrip += config.payoutfrequencyinsec;
-			return res.status(200).json(queueitem);
+				var queueitem = {
+					paydate: nextdrip,
+					address: address,
+					amount: 1 * 1e18
+				};
+
+				var list = snap.val();
+
+				if (list) {
+
+					var length = Object.keys(list).length;
+
+					if (length >= config.queuesize) {
+						// queue is full - reject request
+						return res.status(403).json({
+							msg: 'queue is full'
+						});
+					}
+				}
+
+				queuetasks.push(queueitem);
+				nextdrip += config.payoutfrequencyinsec;
+				return res.status(200).json(queueitem);
+
+			});
 
 		});
+
+
 
 	} else {
 		return res.status(400).json({
