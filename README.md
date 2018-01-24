@@ -52,13 +52,13 @@ http://faucet.ropsten.be:3001/
 
 # API
 
-##Endpoint
+## Endpoint
 ```GET http://faucet.ropsten.be:3001/donate/{ethereum address}```
 
-##Request parameters
+## Request parameters
 ```ethereum address``` your ethereum address
 
-##Response format
+## Response format
 ```
 {
 "paydate": 1461335186,
@@ -71,9 +71,9 @@ http://faucet.ropsten.be:3001/
 * ```paydate``` the unix timestamp when the transaction will be executed. Depends on the current length of the queue
 * ```address``` the address where the payment will be done
 * ```amount``` the amount in Wei that will be transferred
-* ```txhash``` transaction hash : if the queue is empty, you will immediately receive the transaction log - if the queue is not empty - your request will be queued until paydate and the txhash field will be empty.
+* ```txhash``` transaction hash : if the queue is empty, you will immediately receive the transaction hash - if the queue is not empty - your request will be queued until paydate and the txhash field will be empty.
 
-##HTTP Return / error codes
+## HTTP Return / error codes
 
 * ```200``` : Request OK
 * ```400``` : The address in invalid
