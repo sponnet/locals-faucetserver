@@ -110,13 +110,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div class="canvas">
-      <h1>Ethereum Ropsten Faucet</h1>
+      <h1>Ethereum Ropsten Faucet.</h1>
       <!-- <p>Testnet Helicopter money</p> -->
       <div class="whitespace"></div>
 
       <locals-input bind-value="{{address}}" label="Enter your testnet account address"></locals-input>
       <div class="whitespace"></div>
-      <locals-button on-tap="sendether">Send me 1 test ether!</locals-button>
+      <locals-button on-tap="sendether">Send me {{faucetinfo.payoutamountinether}} test ether!</locals-button>
       <br>
       <template is="dom-if" if="{{faucetresponse}}">       
           <div class="queue">
@@ -140,7 +140,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <br>
       <small>
         Example REST API: http://faucet.ropsten.be:3001/donate/&lt;your ethereum address&gt;
-        <a href="https://github.com/locals-world/locals-faucetserver#api">API docs</a>
+        <a href="https://github.com/sponnet/locals-faucetserver#api">API docs</a>
       </small>
 
       <iron-ajax
@@ -205,7 +205,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <p>This component is proudly brought to you by</p>
         <div class="alabs">
           <img src="../../images/A-LabsLogo.svg">
-          <a href="//github.com/locals-world">A-Labs</a>
+          <a href="https://github.com/sponnet/locals-faucetserver/">A-Labs</a>
         </div>
       </div>
 

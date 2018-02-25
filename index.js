@@ -98,6 +98,7 @@ app.use(express.static('static/locals-faucet/dist'));
 
 var randomQueueName = "queue" + Date.now();
 var blacklistName = "blacklist";
+var greylistName = "greylist";
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
@@ -126,6 +127,7 @@ var options = {
 
 var queueRef = myRootRef.child(randomQueueName);
 var blacklist = myRootRef.child(blacklistName);
+var greylist = myRootRef.child(greylistName);
 
 var nextpayout = getTimeStamp();
 
@@ -194,14 +196,34 @@ app.get('/donate/:address', function(req, res) {
 		blacklist.child(address).once('value', function(snapshot) {
 			var exists = (snapshot.val() !== null);
 			if (exists) {
+				console.log(address,'->blacklist');
 				return res.status(200).json({
 					paydate: 0,
 					address: address,
-					amount: 0
+					amount: 0,
+					message: 'you are blacklisted'
 				});
 			}
 
-
+			greylist.child(address).once('value', function(snapshot) {
+                        var exists = (snapshot.val() !== null);
+                        
+			if (exists){
+				var greylistage = (Date.now() - snapshot.val());
+				if (greylistage < 1000 * 60 * 60){
+				console.log(address,'->greylist');
+                                return res.status(200).json({
+                                        paydate: 0,
+                                        address: address,
+                                        amount: 0,
+					message: 'you are greylisted',
+					snapshot: snapshot.val(),
+					duration: greylistage
+				});
+				}
+                        }
+			greylist.child(address).set(Date.now());
+			
 			var queuetasks = queueRef.child('tasks');
 			queuetasks.once('value', function(snap) {
 
@@ -237,6 +259,7 @@ app.get('/donate/:address', function(req, res) {
 			});
 
 		});
+});
 
 
 
