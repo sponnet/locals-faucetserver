@@ -210,7 +210,7 @@ app.get('/donate/:address', function(req, res) {
                         
 			if (exists){
 				var greylistage = (Date.now() - snapshot.val());
-				if (greylistage < 1000 * 60 * 60){
+				if (greylistage < 1000 * 60 * 60 * 24 * 7){
 				console.log(address,'->greylist');
                                 return res.status(200).json({
                                         paydate: 0,
