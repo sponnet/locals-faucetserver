@@ -76,7 +76,7 @@ http://faucet.ropsten.be:3001/
 ## HTTP Return / error codes
 
 * ```200``` : Request OK
-* ```400``` : The address in invalid
+* ```400``` : The address is invalid
 * ```403``` : The queue is full. You should wait a moment and try again later. 
 * ```500``` : Internal faucet error
 
