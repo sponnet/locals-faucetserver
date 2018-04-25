@@ -1,7 +1,9 @@
 # locals-faucetserver
-a Ropsten (testnet) Ether faucet with a Polymer frontend and a REST API
 
-#prerequisites
+An Ethereum faucet with a Polymer frontend and a REST API. Works on any network you configure (and fund the faucet account ofcourse).
+
+# prerequisites
+
 - A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
 - A free Firebase account to host the queue
 
