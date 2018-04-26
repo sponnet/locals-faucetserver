@@ -1,7 +1,9 @@
 # locals-faucetserver
-a Ropsten (testnet) Ether faucet with a Polymer frontend and a REST API
 
-#prerequisites
+An Ethereum faucet with a Polymer frontend and a REST API. Works on any network you configure (and fund the faucet account ofcourse).
+
+# prerequisites
+
 - A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
 - A free Firebase account to host the queue
 
@@ -76,7 +78,7 @@ http://faucet.ropsten.be:3001/
 ## HTTP Return / error codes
 
 * ```200``` : Request OK
-* ```400``` : The address in invalid
+* ```400``` : The address is invalid
 * ```403``` : The queue is full. You should wait a moment and try again later. 
 * ```500``` : Internal faucet error
 
