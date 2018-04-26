@@ -20,6 +20,13 @@ cd ../../..
 ```
 
 Create a lightwallet ```wallet.json```
+
+```
+node mkwallet.js myPassword > wallet.json
+```
+ 
+( The password currently also needs to be set in the index.js at `lightwallet.keystore.deriveKeyFromPassword()` )
+
 Create a config file ```config.json```
 
 ```
