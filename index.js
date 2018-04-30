@@ -70,9 +70,9 @@ lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 		queueLength()
 	]).then(([lengths, length]) => {
 
-		console.log('Exeptions count', JSON.stringify(lengths, null, 2));
+		console.log('Exceptions count:', JSON.stringify(lengths, null, 2));
 		console.log('Current Queue length =', length);
-		
+
 		// start webserver...
 		app.listen(config.httpport, function() {
 			console.log('faucet listening on port ', config.httpport);
@@ -233,7 +233,7 @@ function iterateQueue() {
 					values: true
 				})
 				.on('data', async (item) => {
-					//item = JSON.parse(item);
+
 					console.log('item:', item);
 					//debugger;
 					stream.destroy();
@@ -241,10 +241,11 @@ function iterateQueue() {
 						if (err) {
 							///
 						}
-						console.log('DONATE TO ', item.value);
+						var data = JSON.parse(item.value);
+						console.log('DONATE TO ', data.address);
 						setDonatedNow();
-						doDonation(item.value).then((txhash) => {
-							console.log('sent ETH to ', item.value);
+						doDonation(data.address).then((txhash) => {
+							console.log('sent ETH to ', data.address);
 							return resolve();
 						});
 					});
@@ -319,25 +320,19 @@ app.get('/donate/:address', function(req, res) {
 			if (exception) {
 				if (exception.reason === 'greylist') {
 					return res.status(200).json({
-						paydate: 0,
 						address: address,
-						amount: 0,
 						message: 'you are greylisted',
 						duration: exception.created + greylistduration - Date.now()
 					});
 				}
 				if (exception.reason === 'blacklist') {
 					return res.status(200).json({
-						paydate: 0,
 						address: address,
-						amount: 0,
 						message: 'you are blacklisted'
 					});
 				}
 			} else {
-
 				canDonateNow().then((canDonate) => {
-					console.log('can donate now = ', canDonate);
 					if (canDonate) {
 						// donate right away
 						doDonation(address).then((txhash) => {
@@ -355,11 +350,11 @@ app.get('/donate/:address', function(req, res) {
 							});
 						});
 					} else {
+						// queue item
 						queueLength().then((length) => {
 							if (length < config.queuesize) {
-								// TODO queue item
 								enqueueRequest(address).then((paydate) => {
-									console.log('request queued');
+									console.log('request queued for', address);
 									var queueitem = {
 										paydate: paydate,
 										address: address,
