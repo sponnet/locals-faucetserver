@@ -223,7 +223,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       ready: function() {
-        if (web3 && web3.eth && web3.eth.accounts && web3.eth.accounts[0]){
+        if (typeof web3 !== 'undefined' && web3.eth && web3.eth.accounts && web3.eth.accounts[0]){
           this.$.addressfield.value = web3.eth.accounts[0];
         }
       },
