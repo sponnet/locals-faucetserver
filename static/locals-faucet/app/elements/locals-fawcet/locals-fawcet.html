@@ -114,7 +114,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- <p>Testnet Helicopter money</p> -->
       <div class="whitespace"></div>
 
-      <locals-input bind-value="{{address}}" label="Enter your testnet account address"></locals-input>
+      <paper-input id="addressfield" bind-value="{{address}}" label="Enter your testnet account address"></paper-input>
       <div class="whitespace"></div>
       <locals-button on-tap="sendether">Send me {{faucetinfo.payoutamountinether}} test ether!</locals-button>
       <br>
@@ -223,7 +223,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       ready: function() {
-
+        if (web3 && web3.eth && web3.eth.accounts && web3.eth.accounts[0]){
+          this.$.addressfield.value = web3.eth.accounts[0];
+        }
       },
 
       formatnumber: function(n) {
