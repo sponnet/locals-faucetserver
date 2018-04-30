@@ -65,20 +65,10 @@ lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 
 	account = fixaddress(keystore.getAddresses()[0]);
 
-	Promise.all([
-		exceptionsLength(),
-		queueLength()
-	]).then(([lengths, length]) => {
-
-		console.log('Exceptions count:', JSON.stringify(lengths, null, 2));
-		console.log('Current Queue length =', length);
-
-		// start webserver...
-		app.listen(config.httpport, function() {
-			console.log('faucet listening on port ', config.httpport);
-		});
+	// start webserver...
+	app.listen(config.httpport, function() {
+		console.log('faucet listening on port ', config.httpport);
 	});
-
 });
 
 
