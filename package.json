@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.6.0",
     "bitcore-mnemonic": "1.0.1",
     "cors": "2.7.1",
     "eth-lightwallet": "2.3.1",

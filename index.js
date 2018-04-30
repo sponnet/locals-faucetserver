@@ -14,8 +14,6 @@ const dbQueue = level(require('os').homedir() + '/.ethfaucet/queue');
 const dbExceptions = level(require('os').homedir() + '/.ethfaucet/exceptions');
 const greylistduration = 1000 * 60 * 60 * 24;
 
-//const queue = require('async/queue');
-
 var faucet_keystore = JSON.stringify(require("./wallet.json"));
 
 var secretSeed = lightwallet.keystore.generateRandomSeed();
@@ -44,7 +42,6 @@ function strStartsWith(str, prefix) {
 var account;
 var web3;
 
-var nextdrip;
 
 lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 
@@ -68,15 +65,22 @@ lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 
 	account = fixaddress(keystore.getAddresses()[0]);
 
-	// start webserver...
-	app.listen(config.httpport, function() {
-		console.log('faucet listening on port ', config.httpport);
+	Promise.all([
+		exceptionsLength(),
+		queueLength()
+	]).then(([lengths, length]) => {
+
+		console.log('Exeptions count', JSON.stringify(lengths, null, 2));
+		console.log('Current Queue length =', length);
+		
+		// start webserver...
+		app.listen(config.httpport, function() {
+			console.log('faucet listening on port ', config.httpport);
+		});
 	});
+
 });
 
-function getTimeStamp() {
-	return Math.floor(new Date().getTime() / 1000);
-}
 
 // Get faucet balance in ether ( or other denomination if given )
 function getFaucetBalance(denomination) {
@@ -87,10 +91,6 @@ app.use(cors());
 
 // polymer app is served from here
 app.use(express.static('static/locals-faucet/dist'));
-
-var randomQueueName = "queue" + Date.now();
-// var blacklistName = "blacklist";
-// var greylistName = "greylist";
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
@@ -107,7 +107,7 @@ app.get('/faucetinfo', function(req, res) {
 		payoutfrequencyinsec: config.payoutfrequencyinsec,
 		payoutamountinether: config.payoutamountinether,
 		queuesize: config.queuesize,
-		queuename: randomQueueName
+		queuename: 'queue'
 	});
 });
 
@@ -115,9 +115,11 @@ app.get('/faucetinfo', function(req, res) {
 app.get('/blacklist/:address', function(req, res) {
 	var address = fixaddress(req.params.address);
 	if (isAddress(address)) {
-		blacklist.child(address).set(Date.now());
-		res.status(200).json({
-			msg: 'address added to blacklist'
+		setException(address, 'blacklist').then(() => {
+			res.status(200).json({
+				msg: 'address added to blacklist'
+			});
+
 		});
 	} else {
 		return res.status(400).json({
@@ -181,6 +183,29 @@ function queueLength() {
 	});
 }
 
+function exceptionsLength() {
+	return new Promise((resolve, reject) => {
+		var lengths = {};
+		dbExceptions.createReadStream({
+				keys: true,
+				values: true
+			})
+			.on('data', function(item) {
+				var data = JSON.parse(item.value);
+				if (!lengths[data.reason]) {
+					lengths[data.reason] = 0;
+				}
+				lengths[data.reason]++;
+			})
+			.on('error', function(err) {
+				reject(err);
+			})
+			.on('end', function() {
+				resolve(lengths);
+			});
+	});
+}
+
 function enqueueRequest(address) {
 	return new Promise((resolve, reject) => {
 		const key = Date.now() + '-' + address;
@@ -219,7 +244,7 @@ function iterateQueue() {
 						console.log('DONATE TO ', item.value);
 						setDonatedNow();
 						doDonation(item.value).then((txhash) => {
-							console.log('sent ETH to ',item.value);
+							console.log('sent ETH to ', item.value);
 							return resolve();
 						});
 					});
