@@ -13,7 +13,7 @@ An Ethereum faucet with a Polymer frontend and a REST API. Works on any network 
 ```
 cd locals-faucetserver
 npm install
-cd static/locals-fawcet
+cd static/locals-faucet
 bower install && npm install
 gulp
 cd ../../..
