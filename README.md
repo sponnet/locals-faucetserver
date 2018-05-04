@@ -35,7 +35,7 @@ Create a config file ```config.json```
 {
 	"etherscanroot": "http://testnet.etherscan.io/address/",
 	"payoutfrequencyinsec": 60,
-	"payoutamountinether": 1,
+	"payoutamountinether": 0.1,
 	"queuesize": 5,
 	"httpport": 3000,
 	"web3": {
