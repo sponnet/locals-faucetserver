@@ -22,9 +22,11 @@ cd ../../..
 Create a lightwallet ```wallet.json```
 
 ```
-node mkwallet.js myPassword > wallet.json
+node mkwallet.js test > wallet.json
 ```
- 
+
+You can change `test` to whatever the password is that you want to encrypt your wallet with.
+
 ( The password currently also needs to be set in the index.js at `lightwallet.keystore.deriveKeyFromPassword()` )
 
 Create a config file ```config.json```
