@@ -36,10 +36,6 @@ Create a config file ```config.json```
 	"payoutamountinether": 1,
 	"queuesize": 5,
 	"httpport": 3000,
-	"firebase": {
-		"secret": "xxxxxxxxxxx",
-		"url": "https://xxxxxxxxx.firebaseio.com/"
-	},
 	"web3": {
 		"host": "http://<YOUR ETH NODE>:8545"
 	}
