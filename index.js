@@ -22,7 +22,8 @@ function isAddress(address) {
 function fixaddress(address) {
 	// Strip all spaces
 	address = address.replace(' ', '');
-
+	// Address lowercase
+	address = address.toLowerCase();
 	//console.log("Fix address", address);
 	if (!strStartsWith(address, '0x')) {
 		return ('0x' + address);
