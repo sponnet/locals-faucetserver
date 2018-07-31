@@ -318,14 +318,14 @@ app.get('/donate/:address', function(req, res) {
 				var exception = addressException || ipException;
 				if (exception) {
 					if (exception.reason === 'greylist') {
-						return res.status(200).json({
+						return res.status(403).json({
 							address: exception.address,
 							message: 'you are greylisted',
 							duration: exception.created + greylistduration - Date.now()
 						});
 					}
 					if (exception.reason === 'blacklist') {
-						return res.status(200).json({
+						return res.status(403).json({
 							address: address,
 							message: 'you are blacklisted'
 						});
