@@ -49,9 +49,9 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 
 		lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 
-			lightwallet.upgrade.upgradeOldSerialized(faucet_keystore, "testing", function(err, b) {
+			//lightwallet.upgrade.upgradeOldSerialized(faucet_keystore, "testing", function(err, b) {
 
-				var keystore = new lightwallet.keystore.deserialize(b);
+				var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
 
 				console.log('connecting to ETH node: ', config.web3.host);
 
@@ -76,7 +76,7 @@ myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) 
 					console.log('Fawcet listening on port ', config.httpport);
 				});
 
-			});
+			//});
 
 		});
 	}
