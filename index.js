@@ -102,6 +102,8 @@ var greylistName = "greylist";
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log('client IP=',ip);
 	var etherbalance = -1;
 	try {
 		etherbalance = getFaucetBalance();
@@ -191,6 +193,9 @@ app.get('/blacklist/:address', function(req, res) {
 app.get('/donate/:address', function(req, res) {
 	console.log('push');
 
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	ip = ip.replace(/\./g,'_');
+
 	var address = fixaddress(req.params.address);
 	if (isAddress(address)) {
 		blacklist.child(address).once('value', function(snapshot) {
@@ -205,13 +210,13 @@ app.get('/donate/:address', function(req, res) {
 				});
 			}
 
-			greylist.child(address).once('value', function(snapshot) {
+			greylist.child(ip).once('value', function(snapshot) {
                         var exists = (snapshot.val() !== null);
                         
 			if (exists){
 				var greylistage = (Date.now() - snapshot.val());
 				if (greylistage < 1000 * 60 * 60 * 24 * 7){
-				console.log(address,'->greylist');
+				console.log(ip,'->greylist');
                                 return res.status(200).json({
                                         paydate: 0,
                                         address: address,
@@ -222,7 +227,7 @@ app.get('/donate/:address', function(req, res) {
 				});
 				}
                         }
-			greylist.child(address).set(Date.now());
+			greylist.child(ip).set(Date.now());
 			
 			var queuetasks = queueRef.child('tasks');
 			queuetasks.once('value', function(snap) {
