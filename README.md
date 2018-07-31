@@ -5,7 +5,6 @@ An Ethereum faucet with a Polymer frontend and a REST API. Works on any network 
 # prerequisites
 
 - A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
-- A free Firebase account to host the queue
 
 # installing
 
@@ -84,7 +83,7 @@ http://faucet.ropsten.be:3001/
 
 * ```200``` : Request OK
 * ```400``` : The address is invalid
-* ```403``` : The queue is full. You should wait a moment and try again later. 
+* ```403``` : The queue is full / you are greylisted / blacklisted.
 * ```500``` : Internal faucet error
 
 
