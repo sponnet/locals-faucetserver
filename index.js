@@ -84,6 +84,8 @@ app.use(express.static('static/locals-faucet/dist'));
 
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log('client IP=',ip);
 	var etherbalance = -1;
 	try {
 		etherbalance = getFaucetBalance();
@@ -320,6 +322,7 @@ app.get('/donate/:address', function(req, res) {
 						address: address,
 						message: 'you are blacklisted'
 					});
+
 				}
 			} else {
 				canDonateNow().then((canDonate) => {
