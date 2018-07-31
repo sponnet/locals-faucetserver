@@ -85,7 +85,7 @@ app.use(express.static('static/locals-faucet/dist'));
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	console.log('client IP=',ip);
+	console.log('client IP=', ip);
 	var etherbalance = -1;
 	try {
 		etherbalance = getFaucetBalance();
@@ -225,9 +225,7 @@ function iterateQueue() {
 					values: true
 				})
 				.on('data', async (item) => {
-
 					console.log('item:', item);
-					//debugger;
 					stream.destroy();
 					dbQueue.del(item.key, (err) => {
 						if (err) {
@@ -273,6 +271,7 @@ function setException(address, reason) {
 		dbExceptions.put(address, JSON.stringify({
 			created: Date.now(),
 			reason: reason,
+			address: address,
 		}), function(err) {
 			if (err) {
 				return reject(err);
@@ -302,69 +301,86 @@ function cleanupException() {
 
 // try to add an address to the donation queue
 app.get('/donate/:address', function(req, res) {
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	ip = ip.replace(/\./g, '_');
 	var address = fixaddress(req.params.address);
 	if (isAddress(address)) {
 		const key = Date.now() + '-' + address;
 		const val = {
 			address: address
 		};
-		getException(address).then((exception) => {
-			if (exception) {
-				if (exception.reason === 'greylist') {
-					return res.status(200).json({
-						address: address,
-						message: 'you are greylisted',
-						duration: exception.created + greylistduration - Date.now()
-					});
-				}
-				if (exception.reason === 'blacklist') {
-					return res.status(200).json({
-						address: address,
-						message: 'you are blacklisted'
-					});
-
-				}
-			} else {
-				canDonateNow().then((canDonate) => {
-					if (canDonate) {
-						// donate right away
-						doDonation(address).then((txhash) => {
-							setException(address, 'greylist').then(() => {
-								var reply = {
-									address: address,
-									txhash: txhash,
-									amount: config.payoutamountinether * 1e18
-								};
-								return res.status(200).json(reply);
-							});
-						}).catch((e) => {
-							return res.status(500).json({
-								err: e.message
-							});
-						});
-					} else {
-						// queue item
-						queueLength().then((length) => {
-							if (length < config.queuesize) {
-								enqueueRequest(address).then((paydate) => {
-									console.log('request queued for', address);
-									var queueitem = {
-										paydate: paydate,
-										address: address,
-										amount: config.payoutamountinether * 1e18
-									};
-									return res.status(200).json(queueitem);
-								});
-							} else {
-								return res.status(403).json({
-									msg: 'queue is full'
-								});
-							}
+		Promise.all([
+				getException(address),
+				getException(ip)
+			])
+			.then(([addressException, ipException]) => {
+				var exception = addressException || ipException;
+				if (exception) {
+					if (exception.reason === 'greylist') {
+						return res.status(200).json({
+							address: exception.address,
+							message: 'you are greylisted',
+							duration: exception.created + greylistduration - Date.now()
 						});
 					}
-				});
-			}
-		});
+					if (exception.reason === 'blacklist') {
+						return res.status(200).json({
+							address: address,
+							message: 'you are blacklisted'
+						});
+
+					}
+				} else {
+					canDonateNow().then((canDonate) => {
+						if (canDonate) {
+							// donate right away
+							doDonation(address).then((txhash) => {
+								Promise.all([
+										setException(ip, 'greylist'),
+										setException(address, 'greylist')
+									])
+									.then(() => {
+										var reply = {
+											address: address,
+											txhash: txhash,
+											amount: config.payoutamountinether * 1e18
+										};
+										return res.status(200).json(reply);
+									});
+							}).catch((e) => {
+								return res.status(500).json({
+									err: e.message
+								});
+							});
+						} else {
+							// queue item
+							queueLength().then((length) => {
+								if (length < config.queuesize) {
+									enqueueRequest(address).then((paydate) => {
+										console.log('request queued for', address);
+										Promise.all([
+												setException(ip, 'greylist'),
+												setException(address, 'greylist')
+											])
+											.then(() => {
+												var queueitem = {
+													paydate: paydate,
+													address: address,
+													amount: config.payoutamountinether * 1e18
+												};
+												return res.status(200).json(queueitem);
+											});
+									});
+								} else {
+									return res.status(403).json({
+										msg: 'queue is full'
+									});
+								}
+							});
+						}
+					});
+				}
+			});
 	} else {
 		return res.status(400).json({
 			message: 'the address is invalid'
