@@ -9,14 +9,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bitcore-mnemonic": "1.0.1",
     "cors": "2.7.1",
     "eth-lightwallet": "2.3.1",
-    "bitcore-mnemonic": "1.0.1",
     "express": "4.13.4",
     "firebase": "2.4.2",
     "firebase-queue": "1.3.1",
     "hooked-web3-provider": "1.0.0",
+    "level": "^3.0.0",
     "lodash": "4.11.1",
+    "mkdirp": "^0.5.1",
     "web3": "0.15.3"
   }
 }

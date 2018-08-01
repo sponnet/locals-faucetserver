@@ -5,9 +5,14 @@ var Web3 = require('web3');
 var HookedWeb3Provider = require("hooked-web3-provider");
 var lightwallet = require("eth-lightwallet");
 var config = require('./config.json');
-var Firebase = require('firebase');
-var Queue = require('firebase-queue');
-var myRootRef = new Firebase(config.firebase.url);
+const mkdirp = require('mkdirp');
+const level = require('level');
+
+mkdirp.sync(require('os').homedir() + '/.ethfaucet/queue');
+mkdirp.sync(require('os').homedir() + '/.ethfaucet/exceptions');
+const dbQueue = level(require('os').homedir() + '/.ethfaucet/queue');
+const dbExceptions = level(require('os').homedir() + '/.ethfaucet/exceptions');
+const greylistduration = 1000 * 60 * 60 * 24;
 
 var faucet_keystore = JSON.stringify(require("./wallet.json"));
 
@@ -38,54 +43,35 @@ function strStartsWith(str, prefix) {
 var account;
 var web3;
 
-var nextdrip;
 
+lightwallet.keystore.deriveKeyFromPassword("testing", function(err, pwDerivedKey) {
 
-myRootRef.authWithCustomToken(config.firebase.secret, function(error, authData) {
-	if (error) {
-		console.log("Firebase Login Failed!", error);
-		proccess.exit();
-	} else {
-		console.log("Firebase Login Succeeded!", authData);
+	var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
 
-		lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
+	console.log('connecting to ETH node: ', config.web3.host);
 
-			//lightwallet.upgrade.upgradeOldSerialized(faucet_keystore, "testing", function(err, b) {
+	var web3Provider = new HookedWeb3Provider({
+		host: config.web3.host,
+		transaction_signer: keystore
+	});
 
-				var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
+	web3 = new Web3();
+	web3.setProvider(web3Provider);
 
-				console.log('connecting to ETH node: ', config.web3.host);
+	keystore.passwordProvider = function(callback) {
+		callback(null, "testing");
+	};
 
-				var web3Provider = new HookedWeb3Provider({
-					host: config.web3.host,
-					transaction_signer: keystore
-				});
+	console.log("Wallet initted addr=" + keystore.getAddresses()[0]);
 
-				web3 = new Web3();
-				web3.setProvider(web3Provider);
+	account = fixaddress(keystore.getAddresses()[0]);
 
-				keystore.passwordProvider = function(callback) {
-					callback(null, "testing");
-				};
-
-				console.log("Wallet initted addr=" + keystore.getAddresses()[0]);
-
-				account = fixaddress(keystore.getAddresses()[0]);
-
-				// start webserver...
-				app.listen(config.httpport, function() {
-					console.log('Fawcet listening on port ', config.httpport);
-				});
-
-			//});
-
-		});
-	}
+	// start webserver...
+	app.listen(config.httpport, function() {
+		console.log('faucet listening on port ', config.httpport);
+	});
 });
 
-function getTimeStamp() {
-	return Math.floor(new Date().getTime() / 1000);
-}
 
 // Get faucet balance in ether ( or other denomination if given )
 function getFaucetBalance(denomination) {
@@ -97,14 +83,10 @@ app.use(cors());
 // polymer app is served from here
 app.use(express.static('static/locals-faucet/dist'));
 
-var randomQueueName = "queue" + Date.now();
-var blacklistName = "blacklist";
-var greylistName = "greylist";
-
 // get current faucet info
 app.get('/faucetinfo', function(req, res) {
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	console.log('client IP=',ip);
+	console.log('client IP=', ip);
 	var etherbalance = -1;
 	try {
 		etherbalance = getFaucetBalance();
@@ -118,166 +100,297 @@ app.get('/faucetinfo', function(req, res) {
 		payoutfrequencyinsec: config.payoutfrequencyinsec,
 		payoutamountinether: config.payoutamountinether,
 		queuesize: config.queuesize,
-		queuename: randomQueueName
+		queuename: 'queue'
 	});
 });
 
-// Creates the Queue
-var options = {
-	numWorkers: config.queuesize,
-	sanitize: false
-};
-
-var queueRef = myRootRef.child(randomQueueName);
-var blacklist = myRootRef.child(blacklistName);
-var greylist = myRootRef.child(greylistName);
-
-var nextpayout = getTimeStamp();
-
-var queue = new Queue(queueRef, options, function(data, progress, resolve, reject) {
-	// Read and process task data
-	console.log('queue item is here...')
-	console.log(data);
-
-	// if (nextpayout - getTimeStamp() > 0) {
-	// need to wait 
-
-	var delay = data.paydate - getTimeStamp();
-
-	console.log('next payout in ', delay, 'sec');
-
-	if (delay < 0) {
-		delay = 0;
-	}
-
-	setTimeout(function() {
-
-
-		donate(data.address, function(err, result) {
-			if (err) {
-				console.log(err);
-				reject();
-			}
-
-			queueRef.child('tasks').child(data._id).child('txhash').set(result)
-				.then(function() {
-					console.log('tx set');
-				});
-
-			setTimeout(function() {
-				resolve();
-				console.log('resolved');
-			}, 20 * 1000);
-
-		});
-
-
-	}, delay * 1000);
-
-});
 
 app.get('/blacklist/:address', function(req, res) {
 	var address = fixaddress(req.params.address);
 	if (isAddress(address)) {
-		blacklist.child(address).set(Date.now());
-		res.status(200).json({
-			msg: 'address added to blacklist'
-		});
-	} else {
-		return res.status(400).json({
-			message: 'the address is invalid'
-		});
-	}
-});
-
-// add our address to the donation queue
-app.get('/donate/:address', function(req, res) {
-	console.log('push');
-
-	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	ip = ip.replace(/\./g,'_');
-
-	var address = fixaddress(req.params.address);
-	if (isAddress(address)) {
-		blacklist.child(address).once('value', function(snapshot) {
-			var exists = (snapshot.val() !== null);
-			if (exists) {
-				console.log(address,'->blacklist');
-				return res.status(200).json({
-					paydate: 0,
-					address: address,
-					amount: 0,
-					message: 'you are blacklisted'
-				});
-			}
-
-			greylist.child(ip).once('value', function(snapshot) {
-                        var exists = (snapshot.val() !== null);
-                        
-			if (exists){
-				var greylistage = (Date.now() - snapshot.val());
-				if (greylistage < 1000 * 60 * 60 * 24 * 7){
-				console.log(ip,'->greylist');
-                                return res.status(200).json({
-                                        paydate: 0,
-                                        address: address,
-                                        amount: 0,
-					message: 'you are greylisted',
-					snapshot: snapshot.val(),
-					duration: greylistage
-				});
-				}
-                        }
-			greylist.child(ip).set(Date.now());
-			
-			var queuetasks = queueRef.child('tasks');
-			queuetasks.once('value', function(snap) {
-
-				// first time
-				if (!nextdrip) {
-					nextdrip = getTimeStamp();
-				}
-
-				var queueitem = {
-					paydate: nextdrip,
-					address: address,
-					amount: 1 * 1e18
-				};
-
-				var list = snap.val();
-
-				if (list) {
-
-					var length = Object.keys(list).length;
-
-					if (length >= config.queuesize) {
-						// queue is full - reject request
-						return res.status(403).json({
-							msg: 'queue is full'
-						});
-					}
-				}
-
-				queuetasks.push(queueitem);
-				nextdrip += config.payoutfrequencyinsec;
-				return res.status(200).json(queueitem);
-
+		setException(address, 'blacklist').then(() => {
+			res.status(200).json({
+				msg: 'address added to blacklist'
 			});
 
 		});
-});
-
-
-
 	} else {
 		return res.status(400).json({
 			message: 'the address is invalid'
 		});
-
 	}
+});
 
+// queue monitor
+setInterval(() => {
+	iterateQueue();
+	cleanupException();
+}, config.payoutfrequencyinsec * 1000);
 
+var lastIteration = 0;
 
+function canDonateNow() {
+	return new Promise((resolve, reject) => {
+		const res = lastIteration < Date.now() - config.payoutfrequencyinsec * 1000;
+		if (!res) {
+			resolve(false);
+		} else {
+			queueLength().then((length) => {
+				resolve(length == 0);
+			});
+		}
+	});
+}
+
+function setDonatedNow() {
+	lastIteration = Date.now();
+	console.log('last donation:', lastIteration);
+}
+
+function doDonation(address) {
+	return new Promise((resolve, reject) => {
+		setDonatedNow();
+		donate(address, (err, txhash) => {
+			if (err) {
+				resolve('0x0');
+			} else {
+				resolve(txhash);
+			}
+		})
+	});
+}
+
+function queueLength() {
+	return new Promise((resolve, reject) => {
+		var count = 0;
+		dbQueue.createReadStream()
+			.on('data', function(data) {
+				count++;
+			})
+			.on('error', function(err) {
+				reject(err);
+			})
+			.on('end', function() {
+				resolve(count);
+			});
+	});
+}
+
+function exceptionsLength() {
+	return new Promise((resolve, reject) => {
+		var lengths = {};
+		dbExceptions.createReadStream({
+				keys: true,
+				values: true
+			})
+			.on('data', function(item) {
+				var data = JSON.parse(item.value);
+				if (!lengths[data.reason]) {
+					lengths[data.reason] = 0;
+				}
+				lengths[data.reason]++;
+			})
+			.on('error', function(err) {
+				reject(err);
+			})
+			.on('end', function() {
+				resolve(lengths);
+			});
+	});
+}
+
+function enqueueRequest(address) {
+	return new Promise((resolve, reject) => {
+		const key = Date.now() + '-' + address;
+		dbQueue.put(key, JSON.stringify({
+			created: Date.now(),
+			address: address,
+		}), function(err) {
+			if (err) {
+				return reject(err);
+			}
+			queueLength().then((length) => {
+				// calculated estimated payout date
+				return resolve(Date.now() + length * config.payoutfrequencyinsec * 1000);
+			})
+		});
+	});
+}
+
+function iterateQueue() {
+	return new Promise((resolve, reject) => {
+		// make sure faucet does not drip too fast.
+		if (canDonateNow()) {
+			var stream = dbQueue.createReadStream({
+					keys: true,
+					values: true
+				})
+				.on('data', (item) => {
+					console.log('item:', item);
+					stream.destroy();
+					dbQueue.del(item.key, (err) => {
+						if (err) {
+							///
+						}
+						var data = JSON.parse(item.value);
+						console.log('DONATE TO ', data.address);
+						setDonatedNow();
+						doDonation(data.address).then((txhash) => {
+							console.log('sent ETH to ', data.address);
+							return resolve();
+						});
+					});
+				});
+		} else {
+			return resolve();
+		}
+	});
+}
+
+// lookup if there is an exception made for this address
+function getException(address) {
+	return new Promise((resolve, reject) => {
+		dbExceptions.get(address, function(err, value) {
+			if (err) {
+				if (err.notFound) {
+					// handle a 'NotFoundError' here
+					return resolve();
+				}
+				// I/O or other error, pass it up the callback chain
+				return reject(err);
+			}
+			value = JSON.parse(value);
+			resolve(value);
+
+		});
+	});
+}
+
+// set an exception for this address ( greylist / blacklist )
+function setException(address, reason) {
+	return new Promise((resolve, reject) => {
+		dbExceptions.put(address, JSON.stringify({
+			created: Date.now(),
+			reason: reason,
+			address: address,
+		}), function(err) {
+			if (err) {
+				return reject(err);
+			}
+			resolve();
+		});
+	});
+}
+
+// check if there are items in the exception queue that need to be cleaned up.
+function cleanupException() {
+	var stream = dbExceptions.createReadStream({
+			keys: true,
+			values: true
+		})
+		.on('data', (item) => {
+			const value = JSON.parse(item.value);
+			if (value.reason === 'greylist') {
+				if (value.created < Date.now() - greylistduration) {
+					dbExceptions.del(item.key, (err) => {
+						console.log('removed ', item.key, 'from greylist');
+					});
+				}
+			}
+		});
+}
+
+// try to add an address to the donation queue
+app.get('/donate/:address', function(req, res) {
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	ip = ip.replace(/\./g, '_');
+	var address = fixaddress(req.params.address);
+	if (isAddress(address)) {
+		const key = Date.now() + '-' + address;
+		const val = {
+			address: address
+		};
+		Promise.all([
+				getException(address),
+				getException(ip)
+			])
+			.then(([addressException, ipException]) => {
+				var exception = addressException || ipException;
+				if (exception) {
+					if (exception.reason === 'greylist') {
+						console.log(exception.address,'is on the greylist');
+						return res.status(403).json({
+							address: exception.address,
+							message: 'you are greylisted',
+							duration: exception.created + greylistduration - Date.now()
+						});
+					}
+					if (exception.reason === 'blacklist') {
+						console.log(exception.address,'is on the blacklist');
+						return res.status(403).json({
+							address: address,
+							message: 'you are blacklisted'
+						});
+
+					}
+				} else {
+					canDonateNow().then((canDonate) => {
+						if (canDonate) {
+							// donate right away
+							console.log('donating now to:',address);
+							doDonation(address).then((txhash) => {
+								Promise.all([
+										setException(ip, 'greylist'),
+										setException(address, 'greylist')
+									])
+									.then(() => {
+										var reply = {
+											address: address,
+											txhash: txhash,
+											amount: config.payoutamountinether * 1e18
+										};
+										return res.status(200).json(reply);
+									});
+							}).catch((e) => {
+								return res.status(500).json({
+									err: e.message
+								});
+							});
+						} else {
+							// queue item
+							console.log('adding address to queue:',address);
+							queueLength().then((length) => {
+								if (length < config.queuesize) {
+									enqueueRequest(address).then((paydate) => {
+										console.log('request queued for', address);
+										Promise.all([
+												setException(ip, 'greylist'),
+												setException(address, 'greylist')
+											])
+											.then(() => {
+												var queueitem = {
+													paydate: paydate,
+													address: address,
+													amount: config.payoutamountinether * 1e18
+												};
+												return res.status(200).json(queueitem);
+											});
+									});
+								} else {
+									return res.status(403).json({
+										msg: 'queue is full'
+									});
+								}
+							});
+						}
+					});
+				}
+			});
+	} else {
+		return res.status(400).json({
+			message: 'the address is invalid'
+		});
+	}
 });
 
 function donate(to, cb) {

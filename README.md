@@ -5,7 +5,6 @@ An Ethereum faucet with a Polymer frontend and a REST API. Works on any network 
 # prerequisites
 
 - A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
-- A free Firebase account to host the queue
 
 # installing
 
@@ -13,7 +12,7 @@ An Ethereum faucet with a Polymer frontend and a REST API. Works on any network 
 ```
 cd locals-faucetserver
 npm install
-cd static/locals-fawcet
+cd static/locals-faucet
 bower install && npm install
 gulp
 cd ../../..
@@ -22,9 +21,11 @@ cd ../../..
 Create a lightwallet ```wallet.json```
 
 ```
-node mkwallet.js myPassword > wallet.json
+node mkwallet.js test > wallet.json
 ```
- 
+
+You can change `test` to whatever the password is that you want to encrypt your wallet with.
+
 ( The password currently also needs to be set in the index.js at `lightwallet.keystore.deriveKeyFromPassword()` )
 
 Create a config file ```config.json```
@@ -33,13 +34,9 @@ Create a config file ```config.json```
 {
 	"etherscanroot": "http://testnet.etherscan.io/address/",
 	"payoutfrequencyinsec": 60,
-	"payoutamountinether": 1,
+	"payoutamountinether": 0.1,
 	"queuesize": 5,
 	"httpport": 3000,
-	"firebase": {
-		"secret": "xxxxxxxxxxx",
-		"url": "https://xxxxxxxxx.firebaseio.com/"
-	},
 	"web3": {
 		"host": "http://<YOUR ETH NODE>:8545"
 	}
@@ -86,7 +83,7 @@ http://faucet.ropsten.be:3001/
 
 * ```200``` : Request OK
 * ```400``` : The address is invalid
-* ```403``` : The queue is full. You should wait a moment and try again later. 
+* ```403``` : The queue is full / you are greylisted / blacklisted.
 * ```500``` : Internal faucet error
 
 
