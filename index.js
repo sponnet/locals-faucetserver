@@ -44,7 +44,7 @@ var account;
 var web3;
 
 
-lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
+lightwallet.keystore.deriveKeyFromPassword("testing", function(err, pwDerivedKey) {
 
 	var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
 
@@ -59,7 +59,7 @@ lightwallet.keystore.deriveKeyFromPassword("test", function(err, pwDerivedKey) {
 	web3.setProvider(web3Provider);
 
 	keystore.passwordProvider = function(callback) {
-		callback(null, "test");
+		callback(null, "testing");
 	};
 
 	console.log("Wallet initted addr=" + keystore.getAddresses()[0]);
@@ -318,6 +318,7 @@ app.get('/donate/:address', function(req, res) {
 				var exception = addressException || ipException;
 				if (exception) {
 					if (exception.reason === 'greylist') {
+						console.log(exception.address,'is on the greylist');
 						return res.status(403).json({
 							address: exception.address,
 							message: 'you are greylisted',
@@ -325,6 +326,7 @@ app.get('/donate/:address', function(req, res) {
 						});
 					}
 					if (exception.reason === 'blacklist') {
+						console.log(exception.address,'is on the blacklist');
 						return res.status(403).json({
 							address: address,
 							message: 'you are blacklisted'
@@ -335,6 +337,7 @@ app.get('/donate/:address', function(req, res) {
 					canDonateNow().then((canDonate) => {
 						if (canDonate) {
 							// donate right away
+							console.log('donating now to:',address);
 							doDonation(address).then((txhash) => {
 								Promise.all([
 										setException(ip, 'greylist'),
@@ -355,6 +358,7 @@ app.get('/donate/:address', function(req, res) {
 							});
 						} else {
 							// queue item
+							console.log('adding address to queue:',address);
 							queueLength().then((length) => {
 								if (length < config.queuesize) {
 									enqueueRequest(address).then((paydate) => {
