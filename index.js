@@ -225,7 +225,7 @@ function iterateQueue() {
 					keys: true,
 					values: true
 				})
-				.on('data', async (item) => {
+				.on('data', (item) => {
 					console.log('item:', item);
 					stream.destroy();
 					dbQueue.del(item.key, (err) => {
@@ -288,7 +288,7 @@ function cleanupException() {
 			keys: true,
 			values: true
 		})
-		.on('data', async (item) => {
+		.on('data', (item) => {
 			const value = JSON.parse(item.value);
 			if (value.reason === 'greylist') {
 				if (value.created < Date.now() - greylistduration) {
