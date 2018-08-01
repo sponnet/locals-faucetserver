@@ -26,8 +26,6 @@ node mkwallet.js test > wallet.json
 
 You can change `test` to whatever the password is that you want to encrypt your wallet with.
 
-( The password currently also needs to be set in the index.js at `lightwallet.keystore.deriveKeyFromPassword()` )
-
 Create a config file ```config.json```
 
 ```
@@ -36,6 +34,7 @@ Create a config file ```config.json```
 	"payoutfrequencyinsec": 60,
 	"payoutamountinether": 0.1,
 	"queuesize": 5,
+	"walletpwd": "test",
 	"httpport": 3000,
 	"web3": {
 		"host": "http://<YOUR ETH NODE>:8545"

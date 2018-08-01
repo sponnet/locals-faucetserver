@@ -44,7 +44,7 @@ var account;
 var web3;
 
 
-lightwallet.keystore.deriveKeyFromPassword("testing", function(err, pwDerivedKey) {
+lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(err, pwDerivedKey) {
 
 	var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
 
@@ -59,7 +59,7 @@ lightwallet.keystore.deriveKeyFromPassword("testing", function(err, pwDerivedKey
 	web3.setProvider(web3Provider);
 
 	keystore.passwordProvider = function(callback) {
-		callback(null, "testing");
+		callback(null, config.walletpwd);
 	};
 
 	console.log("Wallet initted addr=" + keystore.getAddresses()[0]);
