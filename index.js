@@ -7,8 +7,6 @@ var lightwallet = require("eth-lightwallet");
 var config = require('./config.json');
 const mkdirp = require('mkdirp');
 const level = require('level');
-const https = require('https');
-const fs = require('fs');
 
 mkdirp.sync(require('os').homedir() + '/.ethfaucetssl/queue');
 mkdirp.sync(require('os').homedir() + '/.ethfaucetssl/exceptions');
