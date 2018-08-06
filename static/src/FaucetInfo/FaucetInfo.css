@@ -1,0 +1,45 @@
+.today--section {
+        margin-bottom: 40px;
+        padding: 0 50px;
+    }
+    .today--section h2 {
+        font-size: 20px;
+    }
+    .today--section__box {
+        background-color: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 4px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btc--section {
+        text-align: center;
+        border-right: 1px solid #DAE1E9;
+    }
+    .btc--section h5 {
+        font-size: 30px;
+    }
+    .eth--section {
+        text-align: center;
+        border-right: 1px solid #DAE1E9;
+    }
+    .eth--section h5 {
+        font-size: 30px;
+    }
+    .ltc--section {
+        text-align: center;
+    }
+    .ltc--section h5 {
+        font-size: 30px;
+    }
+    @media (max-width: 480px) {
+        .eth--section {
+            border-right: none;
+        }
+        .btc--section {
+            border-right: none;
+        }
+        .today--section {
+            margin-top:  50px;
+        }
+    }
