@@ -9,10 +9,10 @@ const mkdirp = require('mkdirp');
 const level = require('level');
 const https = require('https');
 
-mkdirp.sync(require('os').homedir() + '/.ethfaucet/queue');
-mkdirp.sync(require('os').homedir() + '/.ethfaucet/exceptions');
-const dbQueue = level(require('os').homedir() + '/.ethfaucet/queue');
-const dbExceptions = level(require('os').homedir() + '/.ethfaucet/exceptions');
+mkdirp.sync(require('os').homedir() + '/.ethfaucetssl/queue');
+mkdirp.sync(require('os').homedir() + '/.ethfaucetssl/exceptions');
+const dbQueue = level(require('os').homedir() + '/.ethfaucetssl/queue');
+const dbExceptions = level(require('os').homedir() + '/.ethfaucetssl/exceptions');
 const greylistduration = 1000 * 60 * 60 * 24;
 
 var faucet_keystore = JSON.stringify(require("./wallet.json"));
