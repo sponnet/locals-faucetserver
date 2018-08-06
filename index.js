@@ -7,6 +7,7 @@ var lightwallet = require("eth-lightwallet");
 var config = require('./config.json');
 const mkdirp = require('mkdirp');
 const level = require('level');
+const https = require('https');
 
 mkdirp.sync(require('os').homedir() + '/.ethfaucet/queue');
 mkdirp.sync(require('os').homedir() + '/.ethfaucet/exceptions');
@@ -70,6 +71,16 @@ lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(err, pwDer
 	app.listen(config.httpport, function() {
 		console.log('faucet listening on port ', config.httpport);
 	});
+
+
+	const options = {
+		cert: fs.readFileSync('./sslcert/fullchain.pem'),
+		key: fs.readFileSync('./sslcert/privkey.pem')
+	};
+
+	https.createServer(options, app).listen(443);
+
+
 });
 
 
@@ -318,7 +329,7 @@ app.get('/donate/:address', function(req, res) {
 				var exception = addressException || ipException;
 				if (exception) {
 					if (exception.reason === 'greylist') {
-						console.log(exception.address,'is on the greylist');
+						console.log(exception.address, 'is on the greylist');
 						return res.status(403).json({
 							address: exception.address,
 							message: 'you are greylisted',
@@ -326,7 +337,7 @@ app.get('/donate/:address', function(req, res) {
 						});
 					}
 					if (exception.reason === 'blacklist') {
-						console.log(exception.address,'is on the blacklist');
+						console.log(exception.address, 'is on the blacklist');
 						return res.status(403).json({
 							address: address,
 							message: 'you are blacklisted'
@@ -337,7 +348,7 @@ app.get('/donate/:address', function(req, res) {
 					canDonateNow().then((canDonate) => {
 						if (canDonate) {
 							// donate right away
-							console.log('donating now to:',address);
+							console.log('donating now to:', address);
 							doDonation(address).then((txhash) => {
 								Promise.all([
 										setException(ip, 'greylist'),
@@ -358,7 +369,7 @@ app.get('/donate/:address', function(req, res) {
 							});
 						} else {
 							// queue item
-							console.log('adding address to queue:',address);
+							console.log('adding address to queue:', address);
 							queueLength().then((length) => {
 								if (length < config.queuesize) {
 									enqueueRequest(address).then((paydate) => {
