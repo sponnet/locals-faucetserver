@@ -68,18 +68,18 @@ lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(err, pwDer
 
 	account = fixaddress(keystore.getAddresses()[0]);
 
-	// start webserver...
-	// app.listen(config.httpport, function() {
-	// 	console.log('faucet listening on port ', config.httpport);
-	// });
+	start webserver...
+	app.listen(config.httpport, function() {
+		console.log('faucet listening on port ', config.httpport);
+	});
 
 
-	const options = {
-		cert: fs.readFileSync('./sslcert/fullchain.pem'),
-		key: fs.readFileSync('./sslcert/privkey.pem')
-	};
+	// const options = {
+	// 	cert: fs.readFileSync('./sslcert/fullchain.pem'),
+	// 	key: fs.readFileSync('./sslcert/privkey.pem')
+	// };
 
-	https.createServer(options, app).listen(443);
+	// https.createServer(options, app).listen(443);
 
 
 });
