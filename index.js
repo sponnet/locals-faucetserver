@@ -130,6 +130,23 @@ app.get("/q", function(req, res) {
   });
 });
 
+function getQueue() {
+  var q = [];
+  return new Promise((resolve, reject) => {
+    var stream = dbQueue
+      .createReadStream({
+        keys: true,
+        values: true
+      })
+      .on("data", item => {
+        q.push(item);
+      })
+      .on("end", function() {
+        resolve(q);
+      });
+  });
+}
+
 // queue monitor
 setInterval(() => {
   iterateQueue();
@@ -206,23 +223,6 @@ function exceptionsLength() {
       })
       .on("end", function() {
         resolve(lengths);
-      });
-  });
-}
-
-function getQueue() {
-  var q = [];
-  return new Promise((resolve, reject) => {
-    var stream = dbQueue
-      .createReadStream({
-        keys: true,
-        values: true
-      })
-      .on("data", item => {
-        q.push(item);
-      })
-      .on("end", function() {
-        resolve(q);
       });
   });
 }
