@@ -26,15 +26,13 @@ class FaucetRequest extends Component {
   handleSubmit(event) {
     this.clearMessages();
     if (Eth.isAddress(this.state.targetAccount)) {
-      this.setState({ requestrunning: true});
-
-      setTimeout(function() {
-
+      this.setState({ requestrunning: true });
 
       let apiUrl = config.get("apiurl") + "/donate/" + this.state.targetAccount;
       axios
         .get(apiUrl)
         .then(response => {
+          this.setState({ requestrunning: false });
           if (response.status === 200) {
             this.setState({
               faucetresponse: {
@@ -45,11 +43,20 @@ class FaucetRequest extends Component {
                   config.get("etherscanroot") + "/tx/" + response.data.txhash
               }
             });
+            return;
           }
-          this.setState({ requestrunning: false });
         })
         // Catch any error here
         .catch(error => {
+          this.setState({ requestrunning: false });
+          if (!error || !error.response) {
+            this.setState({
+              fauceterror: {
+                message: 'Error connecting to the API: ' + error.message,
+              }
+            });
+            return;
+          }
           if (error.response.status === 403) {
             let t = new timespan.TimeSpan(error.response.data.duration, 0, 0);
             this.setState({
@@ -59,10 +66,9 @@ class FaucetRequest extends Component {
                 timespan: t
               }
             });
+            return;
           }
-          this.setState({ requestrunning: false });
         });
-      }.bind(this),5000);
     } else {
       this.setState({ fauceterror: { message: "invalid address" } });
     }
@@ -159,6 +165,7 @@ class FaucetRequest extends Component {
                 onClick={this.clearMessages}
               >
                 <div className="message-body">
+                <b>{this.state.fauceterror.message}</b><br/>
                   {this.state.fauceterror.timespan ? (
                     <span>
                       You are greylisted for another{" "}

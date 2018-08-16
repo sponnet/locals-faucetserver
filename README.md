@@ -1,10 +1,10 @@
 # locals-faucetserver
 
-An Ethereum faucet with a Polymer frontend and a REST API. Works on any network you configure (and fund the faucet account ofcourse).
+An Ethereum faucet with a React frontend and a REST API. Works on any network you configure (and fund the faucet account ofcourse).
 
 # prerequisites
 
-- A running local GETH node. ( or access to a node ) with RPC-JSON enabled.
+- A running local GETH node. ( or access to a node like Infura ) with RPC-JSON enabled.
 
 # installing
 
@@ -12,11 +12,12 @@ An Ethereum faucet with a Polymer frontend and a REST API. Works on any network 
 ```
 cd locals-faucetserver
 npm install
-cd static/locals-faucet
-bower install && npm install
-gulp
-cd ../../..
+cd static
+yarn build
+cd ..
 ```
+
+## Configuring the faucet API
 
 Create a lightwallet ```wallet.json```
 
@@ -42,23 +43,28 @@ Create a config file ```config.json```
 }
 ```
 
-If you made it this far, just start your faucet:
+Start your faucet:
 
 ```
 node index.js
 ```
 
-...and point your browser to http://localhost:3001/
+
+## Configuring the faucet frontend
+
+edit the file `static/src/config.js` and specify the base URL for your API
+
+
 
 # Demo
 
-You can access our faucet at:
-http://faucet.ropsten.be:3001/
+You can access our Ropsten testnet faucet at:
+https://faucet.ropsten.be/
 
 # API
 
 ## Endpoint
-```GET http://faucet.ropsten.be:3001/donate/{ethereum address}```
+```GET https://faucet.ropsten.be/donate/{ethereum address}```
 
 ## Request parameters
 ```ethereum address``` your ethereum address

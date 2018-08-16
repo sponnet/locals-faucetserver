@@ -9,7 +9,7 @@ class FaucetInfo extends Component {
   constructor() {
     super();
     this.state = {
-      faucetinfo: {}
+      faucetinfo: null
     };
   }
   // This is called when an instance of a component is being created and inserted into the DOM.
@@ -41,9 +41,10 @@ class FaucetInfo extends Component {
 
   // The render method contains the JSX code which will be compiled to HTML.
   render() {
+    if (!this.state.faucetinfo) return null;
     return (
       <section className="section">
-        <div className="content has-text-centered">
+        <div className="content has-text-centered has-text-weight-light has-text-grey-light">
           <p>
             This faucet drips {this.state.faucetinfo.payoutamountinether} Ether
             every {this.state.faucetinfo.payoutfrequencyinsec} seconds. You can
@@ -60,6 +61,16 @@ class FaucetInfo extends Component {
               suffix={" ETH"}
             />
             ).
+          </p>
+          <p>
+            Example command line: wget {config.get("apiurl")}
+            /donate/&lt;your ethereum address&gt; <br />
+            <a
+              target="_new"
+              href="https://github.com/sponnet/locals-faucetserver#api"
+            >
+              API docs
+            </a>
           </p>
         </div>
       </section>
