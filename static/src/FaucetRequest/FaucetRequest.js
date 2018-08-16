@@ -28,6 +28,9 @@ class FaucetRequest extends Component {
     if (Eth.isAddress(this.state.targetAccount)) {
       this.setState({ requestrunning: true});
 
+      setTimeout(function() {
+
+
       let apiUrl = config.get("apiurl") + "/donate/" + this.state.targetAccount;
       axios
         .get(apiUrl)
@@ -59,6 +62,7 @@ class FaucetRequest extends Component {
           }
           this.setState({ requestrunning: false });
         });
+      }.bind(this),5000);
     } else {
       this.setState({ fauceterror: { message: "invalid address" } });
     }
@@ -125,6 +129,7 @@ class FaucetRequest extends Component {
               </div>
             </form>
           </div>
+          {this.state.requestrunning}
 
           <div className="container">
             {this.state.faucetresponse ? (
