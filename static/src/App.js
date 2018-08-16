@@ -1,36 +1,34 @@
 // Import React and Component
-    import React, { Component } from 'react';
-    // Import CSS from App.css
-    import './App.css';
-    // Import the Today component to be used below
-    import FaucetInfo from './FaucetInfo/FaucetInfo';
-    import FaucetRequest from './FaucetRequest/FaucetRequest';
-   
+import React, { Component } from "react";
+import "bulma/css/bulma.css";
+import "./App.css";
+import FaucetInfo from "./FaucetInfo/FaucetInfo";
+import FaucetRequest from "./FaucetRequest/FaucetRequest";
+import config from "react-global-configuration";
+import configuration from "./config";
 
-    class App extends Component {
-      render() {
-        return (
-          <div className="">
-              <div className="topheader">
-                  <header className="container">
-                      <nav className="navbar">
-                          <div className="navbar-brand">
-                              <span className="navbar-item">Ethereum Faucet</span>
-                          </div>
-                      </nav>
-                  </header>
-              </div>
-              <section className="results--section">
-                  <div className="results--section__inner">
-                     <FaucetInfo />
-                  </div>
-                  <div className="results--section__inner">
-                     <FaucetRequest />
-                  </div>
-              </section>
+config.set(configuration);
+
+class App extends Component {
+  render() {
+    return (
+      <div>
+        <section className="hero is-primary">
+          <div className="hero-body">
+            <div className="container">
+              <h1 className="title">Ropsten Ethereum Faucet</h1>
+            </div>
           </div>
-        );
-      }
-    }
+        </section>
+        
+          <div className="container">
+            <FaucetRequest />
+            <FaucetInfo />
+          </div>
+       
+      </div>
+    );
+  }
+}
 
-    export default App;
+export default App;

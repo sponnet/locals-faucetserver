@@ -1,42 +1,178 @@
-import React, {
-	Component
-} from 'react';
-import './FaucetRequest.css';
+import React, { Component } from "react";
+import "./FaucetRequest.css";
+import Eth from "ethjs";
+import config from "react-global-configuration";
+import axios from "axios";
+import timespan from "timespan";
 
 class FaucetRequest extends Component {
- constructor(props) {
+  constructor(props) {
     super(props);
-    this.state = {value: ''};
+    this.state = { targetAccount: "", requestrunning: false };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.clearMessages = this.clearMessages.bind(this);
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState({ targetAccount: event.target.value });
+  }
+
+  clearMessages(event) {
+    this.setState({ faucetresponse: null, fauceterror: null });
   }
 
   handleSubmit(event) {
-    alert('A name was submitted: ' + this.state.value);
+    this.clearMessages();
+    if (Eth.isAddress(this.state.targetAccount)) {
+      this.setState({ requestrunning: true});
+
+      let apiUrl = config.get("apiurl") + "/donate/" + this.state.targetAccount;
+      axios
+        .get(apiUrl)
+        .then(response => {
+          if (response.status === 200) {
+            this.setState({
+              faucetresponse: {
+                address: response.data.address,
+                amount: response.data.amount,
+                txhash: response.data.txhash,
+                etherscanlink:
+                  config.get("etherscanroot") + "/tx/" + response.data.txhash
+              }
+            });
+          }
+          this.setState({ requestrunning: false });
+        })
+        // Catch any error here
+        .catch(error => {
+          if (error.response.status === 403) {
+            let t = new timespan.TimeSpan(error.response.data.duration, 0, 0);
+            this.setState({
+              fauceterror: {
+                message: error.response.data.message,
+                duration: error.response.data.duration,
+                timespan: t
+              }
+            });
+          }
+          this.setState({ requestrunning: false });
+        });
+    } else {
+      this.setState({ fauceterror: { message: "invalid address" } });
+    }
     event.preventDefault();
   }
 
+  componentDidMount() {
+    window.addEventListener("load", () => {
+      // If web3 is not injected (modern browsers)...
+      if (typeof window.web3 === "undefined") {
+        // Listen for provider injection
+        window.addEventListener("message", ({ data }) => {
+          if (data && data.type && data.type === "ETHEREUM_PROVIDER_SUCCESS") {
+            this.eth = new Eth(window.ethereum);
+          }
+        });
+        // Request provider
+        window.postMessage({ type: "ETHEREUM_PROVIDER_REQUEST" }, "*");
+      }
+      // If web3 is injected (legacy browsers)...
+      else {
+        this.eth = new Eth(window.web3.currentProvider);
+        this.eth
+          .accounts()
+          .then(accounts => {
+            if (accounts && accounts[0]) {
+              this.setState({ targetAccount: accounts[0] });
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }
 
-        render() {
-            return (
-                <div className="today--section container">
-                    <h2>Your ETH address</h2>
-                    <form>
-                    <div className="field">
-                      <div className="control">
-                        <input className="input is-primary" type="text" placeholder="your ETH address" value={this.state.value} onChange={this.handleChange} />
-                      </div>
-                    </div>
-                    <input type="submit" value="Submit" />
-                    </form>
+  render() {
+    return (
+      <div className="">
+        <section className="section">
+          <div className="container bottompadding">
+            <form onSubmit={this.handleSubmit}>
+              <div className="field">
+                <label className="label">
+                  Enter your testnet account address
+                </label>
+                <div className="control">
+                  <input
+                    className="input is-primary"
+                    type="text"
+                    placeholder="Enter your testnet account address"
+                    value={this.state.targetAccount}
+                    onChange={this.handleChange}
+                  />
                 </div>
-            )
-        }
+              </div>
+              <div className="field is-grouped">
+                <div className="control">
+                  <button
+                    disabled={this.state.requestrunning}
+                    className="button is-link"
+                  >
+                    Send me test Ether
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div className="container">
+            {this.state.faucetresponse ? (
+              <article
+                className="message is-success"
+                onClick={this.clearMessages}
+              >
+                <div className="message-body">
+                  <p>Test ETH sent to {this.state.faucetresponse.address}.</p>
+                  <p>
+                    Transaction hash{" "}
+                    <a
+                      target="_new"
+                      href={this.state.faucetresponse.etherscanlink}
+                    >
+                      {this.state.faucetresponse.txhash}
+                    </a>
+                  </p>
+                </div>
+              </article>
+            ) : (
+              <p />
+            )}
+            {this.state.fauceterror ? (
+              <article
+                className="message is-danger"
+                onClick={this.clearMessages}
+              >
+                <div className="message-body">
+                  {this.state.fauceterror.timespan ? (
+                    <span>
+                      You are greylisted for another{" "}
+                      {this.state.fauceterror.timespan.hours} hours and{" "}
+                      {this.state.fauceterror.timespan.minutes} minutes.
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                </div>
+              </article>
+            ) : (
+              <p />
+            )}
+          </div>
+        </section>
+      </div>
+    );
+  }
 }
 
 export default FaucetRequest;

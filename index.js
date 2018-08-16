@@ -95,7 +95,7 @@ function getFaucetBalance(denomination) {
 app.use(cors());
 
 // polymer app is served from here
-app.use(express.static("static/build"));
+//app.use(express.static("static/build"));
 
 // get current faucet info
 app.get("/faucetinfo", function(req, res) {
