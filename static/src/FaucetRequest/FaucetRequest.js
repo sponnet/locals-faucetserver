@@ -77,6 +77,13 @@ class FaucetRequest extends Component {
 
   componentDidMount() {
     window.addEventListener("load", () => {
+      // See if there is a pubkey on the URL
+      let urlTail = window.location.href.split('/').pop();
+      if (Eth.isAddress(urlTail)){
+        this.setState({ targetAccount: urlTail });
+        return;
+      }
+
       // If web3 is not injected (modern browsers)...
       if (typeof window.web3 === "undefined") {
         // Listen for provider injection
