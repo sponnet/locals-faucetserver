@@ -1,0 +1,17 @@
+{
+	"short_name": "ETHFaucet",
+	"name": "Ethereum Faucet",
+	"icons": [{
+		"src": "images/android/android-launchericon-192-192.png",
+		"sizes": "192x192",
+		"type": "image/png"
+	}, {
+		"src": "images/android/android-launchericon-512-512.png",
+		"sizes": "512x512",
+		"type": "image/png"
+	}],
+	"start_url": "./index.html",
+	"display": "standalone",
+	"theme_color": "#003300",
+	"background_color": "#aabbaa"
+}

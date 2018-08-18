@@ -8,10 +8,12 @@ var config = require("./config.json");
 const mkdirp = require("mkdirp");
 const level = require("level");
 
-mkdirp.sync(require("os").homedir() + "/.ethfaucet/queue");
-mkdirp.sync(require("os").homedir() + "/.ethfaucet/exceptions");
-const dbQueue = level(require("os").homedir() + "/.ethfaucet/queue");
-const dbExceptions = level(require("os").homedir() + "/.ethfaucet/exceptions");
+mkdirp.sync(require("os").homedir() + "/.ethfaucetssl/queue");
+mkdirp.sync(require("os").homedir() + "/.ethfaucetssl/exceptions");
+const dbQueue = level(require("os").homedir() + "/.ethfaucetssl/queue");
+const dbExceptions = level(
+  require("os").homedir() + "/.ethfaucetssl/exceptions"
+);
 const greylistduration = 1000 * 60 * 60 * 24;
 
 var faucet_keystore = JSON.stringify(require("./wallet.json"));
@@ -67,10 +69,17 @@ lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(
 
   account = fixaddress(keystore.getAddresses()[0]);
 
-  // start webserver...
+  //start webserver...
   app.listen(config.httpport, function() {
     console.log("faucet listening on port ", config.httpport);
   });
+
+  // const options = {
+  // 	cert: fs.readFileSync('./sslcert/fullchain.pem'),
+  // 	key: fs.readFileSync('./sslcert/privkey.pem')
+  // };
+
+  // https.createServer(options, app).listen(443);
 });
 
 // Get faucet balance in ether ( or other denomination if given )
@@ -85,8 +94,8 @@ function getFaucetBalance(denomination) {
 
 app.use(cors());
 
-// polymer app is served from here
-app.use(express.static("static/locals-faucet/dist"));
+// frontend app is served from here
+app.use(express.static("static/build"));
 
 // get current faucet info
 app.get("/faucetinfo", function(req, res) {
