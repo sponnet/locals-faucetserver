@@ -78,7 +78,7 @@ class FaucetRequest extends Component {
   componentDidMount() {
     window.addEventListener("load", () => {
       // See if there is a pubkey on the URL
-      let urlTail = window.location.href.split('/').pop();
+      let urlTail = window.location.search.substring(1);
       if (Eth.isAddress(urlTail)){
         this.setState({ targetAccount: urlTail });
         return;
