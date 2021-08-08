@@ -4,6 +4,7 @@ import "bulma/css/bulma.css";
 import "./App.css";
 import FaucetInfo from "./FaucetInfo/FaucetInfo";
 import FaucetRequest from "./FaucetRequest/FaucetRequest";
+import Footer from "./Footer";
 import config from "react-global-configuration";
 import configuration from "./config";
 
@@ -25,6 +26,8 @@ class App extends Component {
             <FaucetRequest />
             <FaucetInfo />
           </div>
+
+	<Footer/>
        
       </div>
     );

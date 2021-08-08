@@ -44,7 +44,7 @@ class FaucetInfo extends Component {
     if (!this.state.faucetinfo) return null;
     return (
       <section className="section">
-        <div className="content has-text-centered has-text-weight-light has-text-grey-light">
+        <div className="content has-text-centered has-text-weight-light">
           <p>
             This faucet drips {this.state.faucetinfo.payoutamountinether} Ether
             every {this.state.faucetinfo.payoutfrequencyinsec} seconds. You can

@@ -364,9 +364,12 @@ app.get("/donate/:address", function(req, res) {
         if (exception) {
           if (exception.reason === "greylist") {
             console.log(exception.address, "is on the greylist");
-            return res.status(403).json({
+	    // extend greylist
+            setException(ip, "greylist");
+            setException(address, "greylist");
+	    return res.status(403).json({
               address: exception.address,
-              message: "you are greylisted",
+              message: "you are greylisted - your greylist period is now extended on ip and address for spamming",
               duration: exception.created + greylistduration - Date.now()
             });
           }
@@ -403,7 +406,7 @@ app.get("/donate/:address", function(req, res) {
                 });
             } else {
               // queue item
-              console.log("adding address to queue:", address);
+              //console.log("adding address to queue:", address);
               queueLength().then(length => {
                 if (length < config.queuesize) {
                   enqueueRequest(address).then(paydate => {
@@ -421,6 +424,8 @@ app.get("/donate/:address", function(req, res) {
                     });
                   });
                 } else {
+		  console.log(`queue is full`);
+		  //setException(ip, "greylist");
                   return res.status(403).json({
                     msg: "queue is full"
                   });
@@ -438,12 +443,51 @@ app.get("/donate/:address", function(req, res) {
   }
 });
 
+
 function donate(to, cb) {
+        return donateAmount(to,config.payoutamountinether,cb);
+}
+
+
+app.get('/donate-sponnet/:address/:amount', function(req, res) {
+        var address = fixaddress(req.params.address);
+        var amountEth = parseInt(req.params.amount.toString());
+
+
+	if (amountEth > 1000){
+		 return res.status(400).json({
+      message: `${amountEth} is a little much`
+    });
+	}
+
+	console.log(`Donating ${req.params.amount} to ${address}`);
+
+        donateAmount(address,amountEth,(err,donateres)=>{
+
+
+var body = '<html><body><a href="https://ropsten.etherscan.io/tx/'+donateres+'">https://ropsten.etherscan.io/tx/'+donateres+'</a></body></html>';
+res.writeHead(200, {
+  'Content-Length': Buffer.byteLength(body),
+  'Content-Type': 'text/html'
+});
+res.write(body);
+res.end();
+
+
+//                 return res.status(200).json({
+//                        message:donateres
+//                });
+
+        })
+});
+
+function donateAmount(to,amount,cb) {
+//function donate(to, cb) {
   web3.eth.getGasPrice(function(err, result) {
     var gasPrice = result.toNumber(10);
     console.log("gasprice is ", gasPrice);
 
-    var amount = config.payoutamountinether * 1e18;
+    amount = amount * 1e18;
     console.log("Transferring ", amount, "wei from", account, "to", to);
 
     var options = {

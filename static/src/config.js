@@ -1,5 +1,5 @@
 const config = {
-  apiurl: "http://localhost:3008",
+  apiurl: "https://faucet.ropsten.be",
   etherscanroot: "http://ropsten.etherscan.io"
 };
 
