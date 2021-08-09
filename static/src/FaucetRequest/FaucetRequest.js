@@ -3,7 +3,6 @@ import "./FaucetRequest.css";
 import Eth from "ethjs";
 import config from "react-global-configuration";
 import axios from "axios";
-import timespan from "timespan";
 
 const FaucetRequest = ({ onQueued }) => {
 
@@ -31,7 +30,7 @@ const FaucetRequest = ({ onQueued }) => {
   const submit = () => {
     setCansubmit(false);
 
-    let apiUrl = config.get("apiurl") + "/donate/" + address;
+    let apiUrl = `${config.get("apiurl")}/donate/${config.get("accesskey")}/${address}`;
     axios
       .get(apiUrl)
       .then(response => {

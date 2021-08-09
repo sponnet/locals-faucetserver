@@ -7,7 +7,7 @@ const async = require("async");
 const NodeCache = require("node-cache");
 
 const greylist = new NodeCache({ stdTTL: 60 * 60 * 24 });
-
+const accesskey = require("./static/src/accesskey.json").key;
 
 // check for valid Eth address
 function isAddress(address) {
@@ -124,9 +124,12 @@ app.get("/q", function (req, res) {
       exceptions: greylist.getStats().keys
     });
 });
+app.get(`/donate/:address`, function (req, res) {
+  res.status(200).json({ message: "ok" });
+});
 
 // try to add an address to the donation queue
-app.get("/donate/:address", function (req, res) {
+app.get(`/donate/${accesskey}/:address`, function (req, res) {
   var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   ip = ip.replace(/\./g, "_");
   var address = fixaddress(req.params.address);
