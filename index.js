@@ -2,17 +2,12 @@ var express = require("express");
 var app = express();
 var cors = require("cors");
 var config = require("./config.json");
-const mkdirp = require("mkdirp");
-const level = require("level");
 const ethers = require('ethers');
 const async = require("async");
+const NodeCache = require("node-cache");
 
-// DB for storing exceptions (greylist/blacklist)
-mkdirp.sync(require("os").homedir() + "/.ethfaucetssl/exceptions");
-const dbExceptions = level(
-  require("os").homedir() + "/.ethfaucetssl/exceptions"
-);
-const greylistduration = 1000 * 60 * 60 * 24;
+const greylist = new NodeCache({ stdTTL: 60 * 60 * 24 });
+
 
 // check for valid Eth address
 function isAddress(address) {
@@ -102,89 +97,31 @@ app.get("/faucetinfo", async (req, res) => {
   });
 });
 
-app.get("/blacklist/:address", function (req, res) {
-  var address = fixaddress(req.params.address);
-  if (isAddress(address)) {
-    setException(address, "blacklist").then(() => {
-      res.status(200).json({
-        msg: "address added to blacklist"
-      });
-    });
-  } else {
-    return res.status(400).json({
-      message: "the address is invalid"
-    });
-  }
-});
-
-// cleanup greylist
-setInterval(() => {
-  cleanupException();
-}, 60 * 60 * 1000);
-
 // lookup if there is an exception made for this address
-function getException(address) {
-  return new Promise((resolve, reject) => {
-    dbExceptions.get(address, function (err, value) {
-      if (err) {
-        if (err.notFound) {
-          // handle a 'NotFoundError' here
-          return resolve();
-        }
-        // I/O or other error, pass it up the callback chain
-        return reject(err);
-      }
-      value = JSON.parse(value);
-      resolve(value);
-    });
-  });
+function getException(key) {
+  const val = greylist.get(key);
+  if (!val) return;
+  return ({
+    ...val,
+    key
+  })
 }
 
 // set an exception for this address ( greylist / blacklist )
-function setException(address, reason) {
-  console.log(`adding ${address} to ${reason}`)
-  return new Promise((resolve, reject) => {
-    dbExceptions.put(
-      address,
-      JSON.stringify({
-        created: Date.now(),
-        reason: reason,
-        address: address
-      }),
-      function (err) {
-        if (err) {
-          return reject(err);
-        }
-        resolve();
-      }
-    );
-  });
-}
-
-// check if there are items in the exception queue that need to be cleaned up.
-function cleanupException() {
-  dbExceptions
-    .createReadStream({
-      keys: true,
-      values: true
-    })
-    .on("data", item => {
-      const value = JSON.parse(item.value);
-      if (value.reason === "greylist") {
-        if (value.created < Date.now() - greylistduration) {
-          dbExceptions.del(item.key, err => {
-            console.log("removed ", item.key, "from greylist");
-          });
-        }
-      }
-    });
+function setException(key, reason) {
+  if (key && key !== undefined) {
+    greylist.set(key, { reason });
+  } else {
+    console.log(`no key given to setException`)
+  }
 }
 
 app.get("/q", function (req, res) {
   return res.status(200).json(
     {
       last: [...donations],
-      current: [...q]
+      current: [...q],
+      exceptions: greylist.getStats().keys
     });
 });
 
@@ -194,48 +131,39 @@ app.get("/donate/:address", function (req, res) {
   ip = ip.replace(/\./g, "_");
   var address = fixaddress(req.params.address);
   if (isAddress(address)) {
-    Promise.all([
-      getException(address),
-      getException(ip)
-    ])
-      .then(
-        ([addressException, ipException]) => {
-          var exception = addressException || ipException;
-          // check if address/ip is not greylisted or blacklisted
-          if (exception) {
-            if (exception.reason === "greylist") {
-              console.log(exception.address, "is on the greylist");
-              // extend greylist
-              // setException(ip, "greylist");
-              setException(address, "greylist");
-              return res.status(403).json({
-                address: exception.address,
-                message: "you are greylisted - greylist period is now reset on this ip and address",
-                duration: exception.created + greylistduration - Date.now()
-              });
-            }
-            if (exception.reason === "blacklist") {
-              console.log(exception.address, "is on the blacklist");
-              return res.status(403).json({
-                address: address,
-                message: "you are blacklisted"
-              });
-            }
-          }
-          // check if queue is not full
-          if (q.length() >= config.queuesize) {
-            return res.status(403).json({
-              message: "queue is full. Try again later."
-            });
-          }
+    // check if address/ip is not greylisted or blacklisted
+    const exception = getException(address) || getException(ip);
+    if (exception) {
+      if (exception.reason === "greylist") {
+        console.log(exception.key, "is on the greylist");
+        // extend greylist
+        setException(ip, "greylist");
+        setException(address, "greylist");
+        return res.status(403).json({
+          address: exception.address,
+          message: "you are greylisted - greylist period is now reset on this ip and address",
+        });
+      }
+      if (exception.reason === "blacklist") {
+        console.log(exception.address, "is on the blacklist");
+        return res.status(403).json({
+          address: address,
+          message: "you are blacklisted"
+        });
+      }
+    }
+    // check if queue is not full
+    if (q.length() >= config.queuesize) {
+      return res.status(403).json({
+        message: "queue is full. Try again later."
+      });
+    }
 
-          q.push({ address });
-          // setException(ip, "greylist");
-          // setException(address, "greylist");
-          return res.status(200).json({ message: "request added to the queue" });
+    q.push({ address });
+    setException(ip, "greylist");
+    setException(address, "greylist");
+    return res.status(200).json({ message: "request added to the queue" });
 
-        }
-      );
   } else {
     return res.status(400).json({
       message: "the address is invalid"
@@ -244,8 +172,7 @@ app.get("/donate/:address", function (req, res) {
 });
 
 function donate(to, cb) {
-  // return donateAmount(to, config.payoutamountinether, cb);
-  cb(null, "hashhash");
+  return donateAmount(to, config.payoutamountinether, cb);
 }
 
 function donateAmount(to, amount, cb) {
