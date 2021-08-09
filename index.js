@@ -124,8 +124,12 @@ app.get("/q", function (req, res) {
       exceptions: greylist.getStats().keys
     });
 });
+
 app.get(`/donate/:address`, function (req, res) {
-  res.status(200).json({ message: "ok" });
+  console.log(`request on old endpoint.. keeping them busy`);
+  setTimeout(()=>{
+    res.status(200).json({ message: "ok" });
+  },60*1000)
 });
 
 // try to add an address to the donation queue
