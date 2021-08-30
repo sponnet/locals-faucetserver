@@ -1,11 +1,11 @@
-var express = require("express");
-var app = express();
-var cors = require("cors");
-var config = require("./config.json");
-const ethers = require('ethers');
 const async = require("async");
+const cors = require("cors");
+const ethers = require('ethers');
+const express = require("express");
 const NodeCache = require("node-cache");
 
+const app = express();
+const config = require("./config.json");
 const greylist = new NodeCache({ stdTTL: 60 * 60 * 24 });
 const accesskey = require("./static/src/accesskey.json").key;
 
