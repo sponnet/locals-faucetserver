@@ -112,8 +112,6 @@ app.get(`/donate/:address`, function (req, res) {
 
 // try to add an address to the donation queue
 app.get(`/donate/${accesskey}/:address`, function (req, res) {
-  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  ip = ip.replace(/\./g, "_");
   // Strip all spaces
   var address = req.params.address.replace(" ", "");
   try {
@@ -126,6 +124,8 @@ app.get(`/donate/${accesskey}/:address`, function (req, res) {
       message: "the address is invalid"
     });
   }
+  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  ip = ip.replace(/\./g, "_");
   // check if address/ip is not greylisted or blacklisted
   const exception = getException(address) || getException(ip);
   if (exception) {
