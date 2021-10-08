@@ -11,7 +11,7 @@ const accesskey = require("./static/src/accesskey.json").key;
 
 // set up wallet
 console.log(`connecting to ${config.web3.host}`);
-var customHttpProvider = new ethers.providers.JsonRpcProvider(config.web3.host);
+let customHttpProvider = new ethers.providers.JsonRpcProvider(config.web3.host);
 let wallet = new ethers.Wallet(config.walletpk, customHttpProvider);
 console.log(`wallet address = ${wallet.address}`);
 
@@ -56,9 +56,9 @@ app.use(express.static("static/build"));
 
 // get current faucet info
 app.get("/faucetinfo", async (req, res) => {
-  var ip = req.headers["x-forwarded-for"] || req.remoteAddress;
+  let ip = req.headers["x-forwarded-for"] || req.remoteAddress;
   console.log("client IP=", ip);
-  var etherbalance = -1;
+  let etherbalance = -1;
   try {
     etherbalance = await getFaucetBalance();
   } catch (e) {
@@ -113,7 +113,7 @@ app.get(`/donate/:address`, function (req, res) {
 // try to add an address to the donation queue
 app.get(`/donate/${accesskey}/:address`, function (req, res) {
   // Strip all spaces
-  var address = req.params.address.replace(" ", "");
+  let address = req.params.address.replace(" ", "");
   try {
     // check for valid Eth address
     // then convert it to checksum address with 0x prefix
@@ -124,7 +124,7 @@ app.get(`/donate/${accesskey}/:address`, function (req, res) {
       message: "the address is invalid"
     });
   }
-  var ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   ip = ip.replace(/\./g, "_");
   // check if address/ip is not greylisted or blacklisted
   const exception = getException(address) || getException(ip);
